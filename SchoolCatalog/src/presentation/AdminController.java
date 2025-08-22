@@ -29,6 +29,13 @@ public class AdminController {
                 throw new RuntimeException(ex);
             }
         });
+        view.getSetSubjectTeacherButton().addActionListener(e -> {
+            try {
+                setSubjectTeacher();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
     }
 
     private void addUser() {
@@ -43,10 +50,6 @@ public class AdminController {
             return;
         }
 
-        String emailregex = "^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$";
-        if (!email.matches(emailregex)) {
-            JOptionPane.showMessageDialog(view, "Invalid email address.", "Error", JOptionPane.ERROR_MESSAGE);
-        }
 
         try {
             User user = new User(username, password, role);
@@ -55,7 +58,7 @@ public class AdminController {
             if ("student".equals(role)) {
                 dao.insertStudent(userId, name, email);
             } else if ("teacher".equals(role)) {
-                dao.insertTeacher(userId, name);
+                dao.insertTeacher(userId, name,email);
             }
 
             refreshTable();
@@ -78,6 +81,33 @@ public class AdminController {
         } else {
             JOptionPane.showMessageDialog(view, "Failed to delete user.", "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private void setSubjectTeacher() throws SQLException {
+        int userId = view.getSelectedUserId();
+        if(userId == -1){
+            JOptionPane.showMessageDialog(view, "Please select a user.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        User user = dao.getUserById(userId);
+        if(!"teacher".equalsIgnoreCase(user.getRole())){
+            JOptionPane.showMessageDialog(view, "User is not a teacher.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        String subjectname = JOptionPane.showInputDialog("Enter subject name:");
+        if(subjectname == null || subjectname.trim().isEmpty()){
+            return;
+        }
+
+        try{
+            dao.SubjecttoTeacher(userId,subjectname.trim());
+            JOptionPane.showMessageDialog(view, "Subject added to teacher.");
+            refreshTable();
+        }catch(SQLException ex){
+            JOptionPane.showMessageDialog(view, "Error adding subject to teacher.", "Error", JOptionPane.ERROR_MESSAGE);
+            throw new RuntimeException(ex);
+        }
+
     }
 
     private void refreshTable() throws SQLException {

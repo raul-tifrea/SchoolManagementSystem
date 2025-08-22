@@ -1,5 +1,6 @@
 package presentation;
 
+import model.Subject;
 import model.User;
 
 import javax.swing.*;
@@ -19,11 +20,12 @@ public class AdminView extends JPanel{
     private JButton addButton;
     private JButton deleteButton;
     private JComboBox<String> roleBox;
+    private JButton setSubjectTeacher;
 
     public AdminView(){
         setLayout(new BorderLayout());
 
-        model = new DefaultTableModel(new Object[]{"ID","Username","Role"},0);
+        model = new DefaultTableModel(new Object[]{"ID","Username","Role","Subject"},0);
         table = new JTable(model);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
@@ -35,6 +37,7 @@ public class AdminView extends JPanel{
         roleBox = new JComboBox<>(new String[]{"student","teacher"});
         addButton = new JButton("Add User");
         deleteButton = new JButton("Delete User");
+        setSubjectTeacher = new JButton("Set Subject Teacher");
 
         formPanel.add(new JLabel("Username"));
         formPanel.add(usernameField);
@@ -48,9 +51,14 @@ public class AdminView extends JPanel{
         formPanel.add(roleBox);
         formPanel.add(addButton);
         formPanel.add(deleteButton);
+        formPanel.add(setSubjectTeacher);
 
         add(formPanel, BorderLayout.SOUTH);
 
+    }
+
+    public JButton getSetSubjectTeacherButton(){
+        return setSubjectTeacher;
     }
 
     public int getSelectedUserId(){
@@ -64,7 +72,11 @@ public class AdminView extends JPanel{
     public void updateTable(List<User> users){
         model.setRowCount(0);
         for(User u : users){
-            model.addRow(new Object[]{u.getId(),u.getUsername(),u.getRole()});
+            String subject =" ";
+            if(u.getSubject() == null){
+                subject = "-";
+            }
+            model.addRow(new Object[]{u.getId(),u.getUsername(),u.getRole(),subject});
         }
     }
 

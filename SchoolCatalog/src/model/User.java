@@ -5,7 +5,7 @@ public class User {
     private String username;
     private String password;
     private String role;
-
+    private String Subject;
     public User(){}
 
     public User(int id, String username, String password, String role) {
@@ -22,8 +22,17 @@ public class User {
     }
 
     public String getUsername() {
-        return username;
+        return  username;
     }
+
+    public String getSubject() {
+        return Subject;
+    }
+
+    public void setSubject(String Subject) {
+        this.Subject = Subject;
+    }
+
     public String getPassword() {
         return password;
     }

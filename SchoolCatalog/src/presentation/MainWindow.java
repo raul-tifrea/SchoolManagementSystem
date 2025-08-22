@@ -28,7 +28,7 @@ public class MainWindow extends JFrame {
 
     public MainWindow(){
         setTitle("School Catalog");
-        setSize(800, 600);
+        setSize(1200, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         initComponents();
@@ -87,6 +87,7 @@ public class MainWindow extends JFrame {
         loginButton.setPreferredSize(new Dimension(100, 30));
         panel.add(loginButton, c);
 
+
         loginButton.addActionListener(new ActionListener() {
             @Override
                     public void actionPerformed(ActionEvent e){
@@ -129,7 +130,7 @@ public class MainWindow extends JFrame {
                 JOptionPane.showMessageDialog(this, "Invalid username or password", "Error", JOptionPane.ERROR_MESSAGE);
             } else {
                 JOptionPane.showMessageDialog(this, "Login successful", "Success", JOptionPane.INFORMATION_MESSAGE);
-                roleview(role.toLowerCase());
+                roleview(role.toLowerCase(),user.getId());
             }
         } catch (HeadlessException e) {
             throw new RuntimeException(e);
@@ -138,7 +139,7 @@ public class MainWindow extends JFrame {
         }
     }
 
-    private void roleview(String role) throws SQLException {
+    private void roleview(String role, int userId) throws SQLException {
         getContentPane().removeAll();
 
         JPanel mainPanel = new JPanel(new BorderLayout());
@@ -157,6 +158,7 @@ public class MainWindow extends JFrame {
         } else if(role.equals("teacher")){
             if(teacherView == null){
                 teacherView = new TeacherView();
+                 new TeacherController(teacherView,userId);
 
             }
             MainPane.addTab("Teacher", teacherView);

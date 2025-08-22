@@ -43,12 +43,13 @@ public class AdminDAO {
     }
 
 
-    public void insertTeacher(int userId, String name) throws SQLException{
-        String query = "INSERT INTO teachers (user_id, name) VALUES (?,?)";
+    public void insertTeacher(int userId, String name, String email) throws SQLException{
+        String query = "INSERT INTO teachers (user_id, name, email) VALUES (?,?,?)";
         try(Connection connection = ConnectionFactory.getConnection();
             PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, userId);
             statement.setString(2, name);
+            statement.setString(3, email);
             statement.executeUpdate();
             }
     }
@@ -80,6 +81,29 @@ public class AdminDAO {
         }
         return users;
 
+    }
+
+    public User getUserById(int userId) throws SQLException {
+        String query = "SELECT * FROM users WHERE id = ?";
+        try(Connection connection = ConnectionFactory.getConnection();
+            PreparedStatement statement = connection.prepareStatement(query);) {
+            statement.setInt(1, userId);
+            ResultSet result = statement.executeQuery();
+            if(result.next()){
+                return new User(result.getInt("id"),result.getString("username"),result.getString("password"),result.getString("role"));
+            }
+        }
+        return null;
+    }
+
+    public void SubjecttoTeacher(int userId, String subjectname) throws SQLException{
+        String query = "INSERT INTO subjects (name, teacher_id) SELECT ?, t.id FROM teachers t WHERE t.user_id = ?";
+        try(Connection connection = ConnectionFactory.getConnection();
+            PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, subjectname);
+            statement.setInt(2, userId);
+            statement.executeUpdate();
+        }
     }
 
     public List<String[]> getUsersWithDetails() throws SQLException {

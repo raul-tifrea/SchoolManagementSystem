@@ -2,16 +2,33 @@ package model;
 
 public class Grade {
     private int id;
-    private int studentid;
-    private int subjectid;
+    private String student_name;
+    private String subject;
     private double grade;
 
     public Grade(){}
 
-    public Grade(int id, int studentid, int subjectid, double grade) {
+    public Grade(int id, String student_name, String subject, double grade) {
         this.id = id;
-        this.studentid = studentid;
-        this.subjectid = subjectid;
+        this.student_name = student_name;
+        this.subject = subject;
         this.grade = grade;
+    }
+
+
+    public int getId() {
+        return id;
+    }
+
+    public String getStudentName(){
+        return student_name;
+    }
+
+    public String getSubject(){
+        return subject;
+    }
+
+    public double getValue(){
+        return grade;
     }
 }
