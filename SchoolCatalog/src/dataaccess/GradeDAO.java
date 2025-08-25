@@ -61,15 +61,6 @@ public class GradeDAO {
         }
     }
 
-    public boolean deleteGradesForStudent(int teacherUserId, String studentName) throws SQLException {
-        String sql = " DELETE g FROM grades g JOIN students st ON g.student_id = st.id JOIN subjects sub ON g.subject_id = sub.id JOIN teachers t ON sub.teacher_id = t.id WHERE t.user_id = ? AND st.name = ?";
-        try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, teacherUserId);
-            ps.setString(2, studentName);
-            return ps.executeUpdate() > 0;
-        }
-    }
 
     public boolean deleteGradeById(int gradeId) throws SQLException {
         String sql = "DELETE FROM grades WHERE id = ?";
