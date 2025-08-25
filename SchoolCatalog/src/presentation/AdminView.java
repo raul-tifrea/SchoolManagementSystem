@@ -69,14 +69,11 @@ public class AdminView extends JPanel{
         return (int) table.getValueAt(row, 0);
     }
 
-    public void updateTable(List<User> users){
+    public void updateTable(List<User> users) {
         model.setRowCount(0);
-        for(User u : users){
-            String subject =" ";
-            if(u.getSubject() == null){
-                subject = "-";
-            }
-            model.addRow(new Object[]{u.getId(),u.getUsername(),u.getRole(),subject});
+        for (User u : users) {
+            String subject = (u.getSubject() != null) ? u.getSubject() : "-";
+            model.addRow(new Object[]{u.getId(), u.getUsername(), u.getRole(), subject});
         }
     }
 

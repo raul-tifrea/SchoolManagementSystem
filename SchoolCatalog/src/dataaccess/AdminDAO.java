@@ -69,12 +69,14 @@ public class AdminDAO {
 
     public List<User> getUsers() throws SQLException {
         List<User> users = new ArrayList<>();
-        String query = "SELECT * FROM users";
+        String query = "SELECT u.id, u.username, u.password, u.role,sub.name AS subject_name FROM users u LEFT JOIN teachers t ON u.id = t.user_id LEFT JOIN subjects sub ON t.id = sub.teacher_id\n";
         try(Connection connection = ConnectionFactory.getConnection();
             PreparedStatement statement = connection.prepareStatement(query);
             ResultSet result = statement.executeQuery()) {
             while(result.next()){
-                users.add(new User(result.getInt("id"),result.getString("username"),result.getString("password"),result.getString("role")));
+                User user = new User(result.getInt("id"),result.getString("username"),result.getString("password"),result.getString("role"));
+                user.setSubject(result.getString("subject_name"));
+                users.add(user);
             }
         }catch (SQLException e){
             e.printStackTrace();
@@ -91,6 +93,7 @@ public class AdminDAO {
             ResultSet result = statement.executeQuery();
             if(result.next()){
                 return new User(result.getInt("id"),result.getString("username"),result.getString("password"),result.getString("role"));
+
             }
         }
         return null;

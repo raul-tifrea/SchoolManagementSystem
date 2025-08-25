@@ -12,6 +12,23 @@ import java.util.List;
 
 public class GradeDAO {
 
+    public List<Grade> getGradesForStudent(int studentId, int subjectId) throws SQLException {
+        List<Grade> grades = new ArrayList<>();
+        String query = "SELECT g.id, g.grade FROM grades g JOIN students st ON g.student_id = st.id WHERE st.user_id = ? AND g.subject_id = ? ORDER BY g.id";
+        try(Connection connection = ConnectionFactory.getConnection();
+            PreparedStatement statement = connection.prepareStatement(query)){
+            statement.setInt(1, studentId);
+            statement.setInt(2, subjectId);
+            try(ResultSet result = statement.executeQuery()){
+                while(result.next()){
+                    grades.add(new Grade(result.getInt("id"), null, null, result.getDouble("grade")));
+                }
+            }
+        }
+        return grades;
+    }
+
+
     public List<Grade> getGradesForTeacher(int teacherId) throws SQLException {
         List<Grade> grades = new ArrayList<>();
         String query = "SELECT g.id, st.name AS student_name, sub.name AS subject, g.grade " +

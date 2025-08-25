@@ -165,6 +165,7 @@ public class MainWindow extends JFrame {
         } else if(role.equals("student")){
             if(studentView == null){
                 studentView = new StudentView();
+                new StudentController(studentView,userId);
             }
             MainPane.addTab("Student", studentView);
         }
