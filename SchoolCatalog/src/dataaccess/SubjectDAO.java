@@ -12,6 +12,19 @@ import java.util.List;
 
 public class SubjectDAO {
 
+    public List<Subject> getAllSubjects() throws SQLException {
+        List<Subject> subjects = new ArrayList<>();
+        String sql = "SELECT id, name FROM subjects ORDER BY name";
+        try (Connection conn = ConnectionFactory.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                subjects.add(new Subject(rs.getInt("id"), rs.getString("name")));
+            }
+        }
+        return subjects;
+    }
+
     public List<Subject> getSubjectsForStudent(int studentId) throws SQLException{
         List<Subject> subjects = new ArrayList<>();
         String query = "SELECT DISTINCT sub.id, sub.name FROM subjects sub JOIN grades g ON sub.id = g.subject_id JOIN students st ON g.student_id = st.id WHERE st.user_id = ? ORDER BY sub.name";

@@ -31,8 +31,7 @@ public class GradeDAO {
 
     public List<Grade> getGradesForTeacher(int teacherId) throws SQLException {
         List<Grade> grades = new ArrayList<>();
-        String query = "SELECT g.id, st.name AS student_name, sub.name AS subject, g.grade " +
-                "FROM grades g JOIN students st ON g.student_id = st.id JOIN subjects sub ON g.subject_id = sub.id JOIN teachers t ON sub.teacher_id = t.id WHERE t.user_id = ? ORDER BY st.name, sub.name";
+        String query = "SELECT g.id, st.name AS student_name, g.grade FROM grades g JOIN students st ON g.student_id = st.id JOIN subjects sub ON g.subject_id = sub.id JOIN teachers t ON sub.teacher_id = t.id WHERE t.user_id = ? ORDER BY st.name, g.id";
         try(Connection connection = ConnectionFactory.getConnection();
         PreparedStatement statement = connection.prepareStatement(query)){
             statement.setInt(1,teacherId);
@@ -41,7 +40,7 @@ public class GradeDAO {
                     grades.add(new Grade(
                             result.getInt("id"),
                             result.getString("student_name"),
-                            result.getString("subject"),
+                            null,
                             result.getDouble("grade")));
                 }
             }
@@ -51,28 +50,34 @@ public class GradeDAO {
     }
 
 
-    public boolean insertGradeForTeacher(int teacherId, int studentId, int subjectId,double grade) throws SQLException {
-        String query = "INSERT INTO grades (student_id, subject_id, grade) SELECT ?, ?, ? WHERE EXISTS ( SELECT 1 FROM subjects sub JOIN teachers t ON sub.teacher_id = t.id WHERE sub.id = ? AND t.user_id = ? )";
-        try (Connection connection = ConnectionFactory.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setInt(1, studentId);
-            statement.setInt(2, subjectId);
-            statement.setDouble(3, grade);
-            statement.setInt(4, subjectId);
-            statement.setInt(5, teacherId);
-            return statement.executeUpdate() > 0;
-
+    public boolean insertGrade(int teacherUserId, int studentId, double grade) throws SQLException {
+        String sql = " INSERT INTO grades (student_id, subject_id, grade) SELECT ?, sub.id, ? FROM subjects sub JOIN teachers t ON sub.teacher_id = t.id WHERE t.user_id = ? LIMIT 1";
+        try (Connection conn = ConnectionFactory.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, studentId);
+            ps.setDouble(2  , grade);
+            ps.setInt(3, teacherUserId);
+            return ps.executeUpdate() > 0;
         }
     }
 
-    public boolean deleteGradeForTeacher(int teacherId, int gradeId) throws SQLException {
-        String query = "DELETE g FROM grades g JOIN subjects sub ON g.subject_id = sub.id JOIN teachers t ON sub.teacher_id = t.id WHERE g.id = ? AND t.user_id = ?";
-        try(Connection connection = ConnectionFactory.getConnection();
-            PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setInt(1, gradeId);
-            statement.setInt(2, teacherId);
-            return statement.executeUpdate() > 0;
+    public boolean deleteGradesForStudent(int teacherUserId, String studentName) throws SQLException {
+        String sql = " DELETE g FROM grades g JOIN students st ON g.student_id = st.id JOIN subjects sub ON g.subject_id = sub.id JOIN teachers t ON sub.teacher_id = t.id WHERE t.user_id = ? AND st.name = ?";
+        try (Connection conn = ConnectionFactory.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, teacherUserId);
+            ps.setString(2, studentName);
+            return ps.executeUpdate() > 0;
         }
+    }
+
+    public boolean deleteGradeById(int gradeId) throws SQLException {
+        String sql = "DELETE FROM grades WHERE id = ?";
+        try (Connection conn = ConnectionFactory.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, gradeId);
+            return ps.executeUpdate() > 0;
+             }
     }
 
 

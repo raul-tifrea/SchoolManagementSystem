@@ -8,8 +8,10 @@ import model.Student;
 import model.Subject;
 
 import javax.swing.*;
+import java.awt.event.MouseAdapter;
 import java.sql.SQLException;
 import java.util.List;
+import java.awt.*;
 
 public class TeacherController {
     private final TeacherView view;
@@ -18,98 +20,83 @@ public class TeacherController {
     private final SubjectDAO subjectDAO;
     private final int teacherId;
 
-    public TeacherController(TeacherView view, int teacherId) {
+    public TeacherController(TeacherView view, int teacherId) throws SQLException {
         this.view = view;
         this.gradeDAO = new GradeDAO();
         this.studentDAO = new StudentDAO();
         this.subjectDAO = new SubjectDAO();
         this.teacherId = teacherId;
 
+        initListeners();
+        loadStudents();
+        refreshTable();
 
     }
 
 
     public void initListeners(){
         view.getAddGradeButton().addActionListener(e -> addGrade());
-        view.getDeleteGradeButton().addActionListener(e -> deleteGrade());
+        view.getTable().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                int row = view.getTable().rowAtPoint(evt.getPoint());
+                int col = view.getTable().columnAtPoint(evt.getPoint());
+                if(row != -1 && col == 1){
+                    GradeClick(row);
+                }
+            }
+        });
     }
 
+    public void GradeClick(int row){
+        String studentName = (String) view.getTable().getValueAt(row, 0);
+        String grade = (String) view.getTable().getValueAt(row, 1);
+        String[] gradeArray = grade.split("\\s*,\\s*");
+        String selectedGrade = (String) JOptionPane.showInputDialog(null, "Select grade to delete", "Delete Grade", JOptionPane.PLAIN_MESSAGE, null, gradeArray, gradeArray[0]);
+        if(selectedGrade != null){
+            int i = java.util.Arrays.asList(gradeArray).indexOf(selectedGrade);
+            if(i>=0){
+                int gradeId = view.getGradeIdMap().get(studentName).get(i);
+                try{
+                    if(gradeDAO.deleteGradeById(gradeId)){
+                        refreshTable();
+                    }
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
 
     public void addGrade(){
         try{
             Student student = view.getSelectedStudent();
-            Subject subject = view.getSelectedSubject();
-            double grade;
-
-            if(student == null || subject == null){
-                JOptionPane.showMessageDialog(view, "Please select both a student and a subject", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            try{
-                grade = view.getGrade();
-
-            }catch(NumberFormatException ex){
-                JOptionPane.showMessageDialog(view, "Please enter a valid grade", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            if(gradeDAO.insertGradeForTeacher(teacherId,student.getId(),subject.getId(),grade)){
+            double grade = view.getGrade();
+            if(gradeDAO.insertGrade(teacherId,student.getId(),grade)){
                 refreshTable();
                 view.clearForm();
-            }else{
-                JOptionPane.showMessageDialog(view, "Failed to add grade", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(view, "Error adding grade", "Error", JOptionPane.ERROR_MESSAGE);
-            throw new RuntimeException(e);
-
-        }
-    }
-
-    private void deleteGrade(){
-        try{
-            int gradeId = view.getSelectedGradeID();
-            if(gradeId == -1){
-                JOptionPane.showMessageDialog(view, "Please select a grade", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            if(gradeDAO.deleteGradeForTeacher(teacherId,gradeId)){
-                refreshTable();
-            }else{
-                JOptionPane.showMessageDialog(view, "Failed to delete grade", "Error", JOptionPane.ERROR_MESSAGE);
             }
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(view, "Error deleting grade", "Error", JOptionPane.ERROR_MESSAGE);
             throw new RuntimeException(e);
         }
     }
+
 
     private void loadStudents(){
         try{
             List<Student> students = studentDAO.getStudentsForTeacher(teacherId);
+
             view.setStudentCombo(students);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void loadSubjects(){
-        try{
-            List<Subject> subjects = subjectDAO.getSubjectsForTeacher(teacherId);
-            view.setSubjectCombo(subjects);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     private void refreshTable() throws SQLException {
         try{
-            List<Grade> grades = gradeDAO.getGradesForTeacher(teacherId);
-            view.updateTable(grades);
+            view.updateTable(gradeDAO.getGradesForTeacher(teacherId));
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(view, "Error refreshing table", "Error", JOptionPane.ERROR_MESSAGE);
             throw new RuntimeException(e);
         }
     }
