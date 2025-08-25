@@ -27,33 +27,5 @@ public class ConnectionFactory {
                 return singleInstance.createConnection();
         }
 
-        public static void close(Connection connection) {
-                if (connection != null) {
-                        try {
-                                connection.close();
-                        } catch (SQLException e) {
-                                LOGGER.log(Level.WARNING, "An error occurred while trying to close the connection");
-                        }
-                }
-        }
 
-        public static void close(Statement statement) {
-                if (statement != null) {
-                        try {
-                                statement.close();
-                        } catch (SQLException e) {
-                                LOGGER.log(Level.WARNING, "An error occurred while trying to close the statement");
-                        }
-                }
-        }
-
-        public static void close(ResultSet resultSet) {
-                if (resultSet != null) {
-                        try {
-                                resultSet.close();
-                        } catch (SQLException e) {
-                                LOGGER.log(Level.WARNING, "An error occurred while trying to close the ResultSet");
-                        }
-                }
-        }
 }

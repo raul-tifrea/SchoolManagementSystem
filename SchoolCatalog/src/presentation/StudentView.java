@@ -22,7 +22,7 @@ public class StudentView extends JPanel {
         topPanel.add(subjectBox);
         add(topPanel, BorderLayout.NORTH);
 
-        model = new DefaultTableModel(new Object[]{"Grade"},0);
+        model = new DefaultTableModel(new Object[]{"Grade","Average"},0);
         table = new JTable(model);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
@@ -46,8 +46,15 @@ public class StudentView extends JPanel {
 
     public void updateGrades(List<Grade> grades){
         model.setRowCount(0);
+        double sum = 0;
         for(Grade g : grades){
+            sum += g.getValue();
             model.addRow(new Object[]{g.getValue()});
+        }
+
+        if(!grades.isEmpty()){
+            double average = sum / grades.size();
+            model.setValueAt(String.format("%.2f", average), grades.size()/2, 1);
         }
     }
 

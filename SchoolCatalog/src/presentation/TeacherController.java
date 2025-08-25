@@ -72,6 +72,11 @@ public class TeacherController {
         try{
             Student student = view.getSelectedStudent();
             double grade = view.getGrade();
+            if(grade < 1 || grade > 10)
+            {
+                JOptionPane.showMessageDialog(view, "Grade must be between 1 and 10", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
             if(gradeDAO.insertGrade(teacherId,student.getId(),grade)){
                 refreshTable();
                 view.clearForm();

@@ -50,6 +50,12 @@ public class AdminController {
             return;
         }
 
+        String emailverif = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+
+        if(!email.matches(emailverif)){
+            JOptionPane.showMessageDialog(view, "Invalid email address.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
         try {
             User user = new User(username, password, role);

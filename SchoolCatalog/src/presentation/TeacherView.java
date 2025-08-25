@@ -22,7 +22,7 @@ public class TeacherView extends JPanel {
 
    public TeacherView(){
        setLayout(new BorderLayout());
-       model = new DefaultTableModel(new Object[]{"Student Name","Grade"},0){
+       model = new DefaultTableModel(new Object[]{"Student Name","Grade", "Average"},0){
            @Override
            public boolean isCellEditable(int row, int column) {
                return false;
@@ -75,13 +75,17 @@ public class TeacherView extends JPanel {
        model.setRowCount(0);
        gradeIdMap.clear();
        Map<String, StringBuilder> map = new LinkedHashMap<>();
+       Map<String, List<Double>> averageMap = new HashMap<>();
        for(Grade g : grades) {
            map.computeIfAbsent(g.getStudentName(), k -> new StringBuilder()).append(g.getValue()).append(", ");
            gradeIdMap.computeIfAbsent(g.getStudentName(), k -> new ArrayList<>()).add(g.getId());
+           averageMap.computeIfAbsent(g.getStudentName(), k -> new ArrayList<>()).add(g.getValue());
        }
        for(Map.Entry<String, StringBuilder> e : map.entrySet()){
            String allGrade = e.getValue().toString().replaceAll(", $", "");
-           model.addRow(new Object[]{e.getKey(), allGrade});
+           List<Double> average = averageMap.get(e.getKey());
+           double averageGrade = average.stream().mapToDouble(Double::doubleValue).average().orElse(0);
+           model.addRow(new Object[]{e.getKey(), allGrade, String.format("%.2f", averageGrade)});
        }
    }
 
