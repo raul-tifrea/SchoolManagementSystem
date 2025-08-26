@@ -15,12 +15,7 @@ public class AbsenceDAO {
 
     public List<Absence> getAbsencesForStudent(int studentId,int subjecttId) throws Exception{
         List<Absence> absences = new ArrayList<>();
-        String query = "SELECT a.id, st.name AS student_name, sub.name AS subject_name, a.absence_date\n" +
-                "        FROM absences a\n" +
-                "        JOIN students st ON a.student_id = st.id\n" +
-                "        JOIN subjects sub ON a.subject_id = sub.id\n" +
-                "        WHERE st.user_id = ? AND sub.id = ?\n" +
-                "        ORDER BY a.absence_date\n";
+        String query = "SELECT a.id, st.name AS student_name, sub.name AS subject_name, a.absence_date FROM absences a JOIN students st ON a.student_id = st.id JOIN subjects sub ON a.subject_id = sub.id WHERE st.user_id = ? AND sub.id = ? ORDER BY a.absence_date";
         try(Connection connection = ConnectionFactory.getConnection();
             PreparedStatement statement = connection.prepareStatement(query)){
             statement.setInt(1,studentId);

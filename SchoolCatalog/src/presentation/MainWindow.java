@@ -28,7 +28,7 @@ public class MainWindow extends JFrame {
 
     public MainWindow(){
         setTitle("School Catalog");
-        setSize(1200, 600);
+        setSize(1600, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         initComponents();
@@ -36,11 +36,7 @@ public class MainWindow extends JFrame {
 
     private void initComponents() {
         JPanel mainPanel = new JPanel(new BorderLayout());
-        JLabel titleLabel = new JLabel("School Catalog", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         loginPanel = createNewLoginPanel();
-        mainPanel.add(titleLabel, BorderLayout.NORTH);
         mainPanel.add(loginPanel, BorderLayout.CENTER);
 
         MainPane = new JTabbedPane();
@@ -50,43 +46,79 @@ public class MainWindow extends JFrame {
     }
 
     private JPanel createNewLoginPanel(){
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        JPanel panel = new JPanel(new BorderLayout());
 
+        JPanel topBar = new JPanel();
+        topBar.setBackground(new Color(102, 0, 153));
+        topBar.setPreferredSize(new Dimension(1600, 40));
+        panel.add(topBar, BorderLayout.NORTH);
+
+        JPanel leftBar = new JPanel();
+        leftBar.setBackground(new Color(153, 0, 204));
+        leftBar.setPreferredSize(new Dimension(70, 800));
+        panel.add(leftBar, BorderLayout.WEST);
+
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBackground(new Color(241, 241, 241));
         GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(10, 10, 10, 10);
+        c.insets = new Insets(10, 10, 10, 30);
         c.fill = GridBagConstraints.HORIZONTAL;
 
+        JLabel titleLabel = new JLabel("School Catalog");
+        titleLabel.setFont(new Font("Lucida Bright", Font.BOLD, 70));
         c.gridx = 0;
         c.gridy = 0;
-        panel.add(new JLabel("Role"), c);
-
-        c.gridx = 1;
-        roleBox = new JComboBox<>(new String[]{"Admin","Teacher","Student"});
-        roleBox.setPreferredSize(new Dimension(200, 30));
-        panel.add(roleBox, c);
-
-        c.gridx = 0;
-        c.gridy = 1;
-        panel.add(new JLabel("Username"), c);
-        c.gridx = 1;
-        usernameField = new JTextField(20);
-        panel.add(usernameField, c);
-
-        c.gridx = 0;
-        c.gridy = 2;
-        panel.add(new JLabel("Password"), c);
-        c.gridx = 1;
-        passwordField = new JPasswordField(20);
-        panel.add(passwordField, c);
-
-        c.gridx = 1;
-        c.gridy = 3;
+        c.gridwidth = 2;
         c.anchor = GridBagConstraints.CENTER;
-        loginButton = new JButton("Login");
-        loginButton.setPreferredSize(new Dimension(100, 30));
-        panel.add(loginButton, c);
+        formPanel.add(titleLabel, c);
 
+        c.gridwidth = 1;
+
+        c.gridy = 1;
+        c.gridx = 1;
+        c.anchor = GridBagConstraints.CENTER;
+        JLabel roleLabel = new JLabel("Role");
+        roleLabel.setFont(new Font("", Font.PLAIN, 14));
+        formPanel.add(roleLabel, c);
+        c.gridy = 2;
+
+        roleBox = new JComboBox<>(new String[]{"Admin", "Teacher", "Student"});
+        roleBox.setPreferredSize(new Dimension(260, 30));
+        roleBox.setFont(new Font("", Font.PLAIN, 14));
+        roleBox.setBorder(BorderFactory.createSoftBevelBorder(1));
+
+        formPanel.add(roleBox, c);
+        c.gridy = 3;
+
+        JLabel usernameLabel = new JLabel("Username");
+        usernameLabel.setFont(new Font("", Font.PLAIN, 14));
+        formPanel.add(usernameLabel, c);
+        c.gridy = 4;
+        usernameField = new JTextField();
+        usernameField.setPreferredSize(new Dimension(260, 30));
+        usernameField.setBorder(BorderFactory.createSoftBevelBorder(1));
+        formPanel.add(usernameField, c);
+
+        c.gridy = 5;
+
+        JLabel passwordLabel = new JLabel("Password");
+        passwordLabel.setFont(new Font("", Font.PLAIN, 14));
+        formPanel.add(passwordLabel, c);
+        c.gridy = 6;
+        passwordField = new JPasswordField();
+        passwordField.setPreferredSize(new Dimension(260, 30));
+        passwordField.setBorder(BorderFactory.createSoftBevelBorder(1));
+        formPanel.add(passwordField, c);
+
+        c.gridy = 7;
+        c.anchor = GridBagConstraints.CENTER;
+        JButton loginButton = new JButton("Login");
+        loginButton.setFont(new Font("", Font.PLAIN, 14));
+        loginButton.setPreferredSize(new Dimension(100, 30));
+        loginButton.setBorder(BorderFactory.createSoftBevelBorder(0));
+        formPanel.add(loginButton, c);
+
+        panel.add(formPanel, BorderLayout.CENTER);
 
         loginButton.addActionListener(new ActionListener() {
             @Override
@@ -98,7 +130,8 @@ public class MainWindow extends JFrame {
                 }
             }
         });
-
+        usernameField.setFont(new Font("", Font.PLAIN, 14));
+        passwordField.setFont(new Font("", Font.PLAIN, 14));
         passwordField.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -146,7 +179,7 @@ public class MainWindow extends JFrame {
         JPanel logoutPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton logoutButton = new JButton("Logout");
         logoutPanel.add(logoutButton);
-        mainPanel.add(logoutPanel, BorderLayout.NORTH);
+        mainPanel.add(logoutPanel, BorderLayout.SOUTH);
 
         MainPane = new JTabbedPane();
         if(role.equals("admin")){
@@ -188,11 +221,8 @@ public class MainWindow extends JFrame {
     private void logout(){
         getContentPane().removeAll();
         JPanel mainPanel = new JPanel(new BorderLayout());
-        JLabel titleLabel = new JLabel("School Catalog", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
         loginPanel = createNewLoginPanel();
-        mainPanel.add(titleLabel, BorderLayout.NORTH);
         mainPanel.add(loginPanel, BorderLayout.CENTER);
         add(mainPanel);
 
