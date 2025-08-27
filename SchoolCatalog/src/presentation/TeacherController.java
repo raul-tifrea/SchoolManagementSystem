@@ -33,6 +33,7 @@ public class TeacherController {
         initListeners();
         loadStudents();
         refreshTable();
+        refreshAbsences();
 
     }
 
@@ -51,6 +52,13 @@ public class TeacherController {
         });
         view.getAddAbsenceButton().addActionListener(e->addAbsence());
         view.getDeleteAbsenceButton().addActionListener(e->deleteAbsence());
+        view.getAbsenceStudentCombo().addActionListener(e-> {
+            try {
+                refreshAbsences();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
     }
 
     public void GradeClick(int row){
@@ -149,8 +157,13 @@ public class TeacherController {
     }
 
     public void refreshAbsences() throws SQLException{
+        Student student = view.getSelectedAbsenceStudent();
+        if(student == null){
+            return;
+        }
         try{
-            view.updateAbsencesTable(absenceDAO.getAbsencesForTeacher(teacherId));
+            List<Absence> absences = absenceDAO.getAbsencesForStudentId(student.getId(), teacherId);
+            view.updateAbsencesTable(absences);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

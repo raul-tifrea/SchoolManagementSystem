@@ -24,7 +24,6 @@ public class MainWindow extends JFrame {
     private JComboBox<String> roleBox;
     private JTextField usernameField;
     private JPasswordField passwordField;
-    private JButton loginButton;
 
     public MainWindow(){
         setTitle("School Catalog");
@@ -37,9 +36,8 @@ public class MainWindow extends JFrame {
     private void initComponents() {
         JPanel mainPanel = new JPanel(new BorderLayout());
         loginPanel = createNewLoginPanel();
+        loginPanel.setBorder(BorderFactory.createEmptyBorder());
         mainPanel.add(loginPanel, BorderLayout.CENTER);
-
-        MainPane = new JTabbedPane();
         add(mainPanel);
 
 
@@ -47,6 +45,7 @@ public class MainWindow extends JFrame {
 
     private JPanel createNewLoginPanel(){
         JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(48, 24, 78));
 
         JPanel topBar = new JPanel();
         topBar.setBackground(new Color(102, 0, 153));
@@ -55,7 +54,7 @@ public class MainWindow extends JFrame {
 
         JPanel leftBar = new JPanel();
         leftBar.setBackground(new Color(153, 0, 204));
-        leftBar.setPreferredSize(new Dimension(70, 800));
+        leftBar.setPreferredSize(new Dimension(90, 800));
         panel.add(leftBar, BorderLayout.WEST);
 
         JPanel formPanel = new JPanel(new GridBagLayout());
@@ -152,6 +151,7 @@ public class MainWindow extends JFrame {
         String password = new String(passwordField.getPassword());
 
         if(username.isEmpty() || password.isEmpty()){
+
             JOptionPane.showMessageDialog(this, "Please fill in all fields", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -176,16 +176,24 @@ public class MainWindow extends JFrame {
         getContentPane().removeAll();
 
         JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBorder(BorderFactory.createEmptyBorder());
         JPanel logoutPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        logoutPanel.setBackground(new Color(48, 24, 78));
+        logoutPanel.setBorder(BorderFactory.createEmptyBorder());
         JButton logoutButton = new JButton("Logout");
         logoutPanel.add(logoutButton);
         mainPanel.add(logoutPanel, BorderLayout.SOUTH);
 
         MainPane = new JTabbedPane();
+        MainPane.setBorder(BorderFactory.createEmptyBorder());
+
+
         if(role.equals("admin")){
             if(AdminView == null){
                 AdminView = new AdminView();
                 new AdminController(AdminView);
+
+
             }
             MainPane.addTab("Admin", AdminView);
         } else if(role.equals("teacher")){
@@ -204,7 +212,6 @@ public class MainWindow extends JFrame {
         }
 
         mainPanel.add(MainPane, BorderLayout.CENTER);
-
         setContentPane(mainPanel);
         logoutButton.addActionListener(new ActionListener() {
             @Override
@@ -234,19 +241,4 @@ public class MainWindow extends JFrame {
         repaint();
 
     }
-    public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        SwingUtilities.invokeLater(() -> {
-            MainWindow mainWindow = new MainWindow();
-            mainWindow.setVisible(true);
-        });
-    }
-
-
-
 }

@@ -69,5 +69,27 @@ public class AbsenceDAO {
             }
     }
 
+    public List<Absence> getAbsencesForStudentId(int studentId,int teacherId) throws Exception {
+        List<Absence> absences = new ArrayList<>();
+        String query = "SELECT a.id, st.name AS student_name, sub.name AS subject_name, a.absence_date FROM absences a JOIN students st ON a.student_id = st.id JOIN subjects sub ON a.subject_id = sub.id JOIN teachers t ON sub.teacher_id = t.id WHERE st.id = ? AND t.user_id = ? ORDER BY a.absence_date ";
+        try (Connection connection = ConnectionFactory.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, studentId);
+            statement.setInt(2, teacherId);
+            try (ResultSet result = statement.executeQuery()) {
+
+                while (result.next()) {
+                    absences.add(new Absence(
+                            result.getInt("id"),
+                            result.getString("student_name"),
+                            result.getString("subject_name"),
+                            result.getDate("absence_date").toLocalDate()
+                    ));
+                }
+            }
+        }
+        return absences;
+    }
+
 
 }

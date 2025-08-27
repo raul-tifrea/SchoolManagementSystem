@@ -27,8 +27,8 @@ public class AdminView extends JPanel{
 
     public AdminView(){
         setLayout(new BorderLayout());
-
-        model = new DefaultTableModel(new Object[]{"Username","Role","Subject"},0);
+        Object[] cols = new Object[]{"Username","Role","Subject"};
+        model = new DefaultTableModel(cols,0);
         table = new JTable(model);
         table.setBackground(new Color(255, 255, 255));
         table.setBorder(BorderFactory.createMatteBorder(1,1,1,1,Color.BLACK));

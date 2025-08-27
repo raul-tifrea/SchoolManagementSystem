@@ -5,7 +5,6 @@ public class Student {
     private String name;
     private String email;
 
-    public Student(){}
 
     public Student(int id, String name, String email) {
         this.id = id;
@@ -17,9 +16,6 @@ public class Student {
         return name;
     }
 
-    public String getEmail() {
-        return email;
-    }
 
     public int getId() {
         return id;

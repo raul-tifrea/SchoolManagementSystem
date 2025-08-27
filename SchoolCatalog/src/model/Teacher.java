@@ -5,7 +5,6 @@ public class Teacher {
     private String name;
     private String email;
 
-    public Teacher(){}
 
     public Teacher(int id, String name, String email) {
         this.id = id;

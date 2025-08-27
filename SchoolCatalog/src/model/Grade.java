@@ -6,7 +6,6 @@ public class Grade {
     private String subject;
     private double grade;
 
-    public Grade(){}
 
     public Grade(int id, String student_name, String subject, double grade) {
         this.id = id;

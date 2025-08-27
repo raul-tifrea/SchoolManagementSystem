@@ -19,9 +19,6 @@ public class Absence {
         return id;
     }
 
-    public String getStudentname(){
-        return studentname;
-    }
     public String getSubjectname(){
         return subjectname;
     }
