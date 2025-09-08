@@ -1,8 +1,6 @@
 package start;
 
-import model.Student;
-import model.Subject;
-import model.Teacher;
+
 import presentation.MainWindow;
 
 import javax.swing.*;
