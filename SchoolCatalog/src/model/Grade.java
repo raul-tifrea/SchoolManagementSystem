@@ -23,10 +23,6 @@ public class Grade {
         return student_name;
     }
 
-    public String getSubject(){
-        return subject;
-    }
-
     public double getValue(){
         return grade;
     }

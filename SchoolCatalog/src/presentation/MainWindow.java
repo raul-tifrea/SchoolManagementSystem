@@ -8,10 +8,7 @@ import java.sql.SQLException;
 
 import dataaccess.UserDAO;
 import model.User;
-import presentation.AdminView;
-import presentation.StudentView;
-import presentation.TeacherView;
-import presentation.AdminController;
+
 
 public class MainWindow extends JFrame {
 
