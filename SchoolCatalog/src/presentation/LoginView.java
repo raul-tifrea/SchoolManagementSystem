@@ -21,7 +21,7 @@ public class LoginView {
 
     public LoginView() {
         BorderPane root = new BorderPane();
-        root.getStyleClass().add("sidebar"); // Reusing the dark background
+        root.getStyleClass().add("sidebar");
         
         VBox card = new VBox(15);
         card.getStyleClass().add("card");
@@ -59,7 +59,7 @@ public class LoginView {
         root.setCenter(card);
         
         scene = new Scene(root, 600, 500);
-        // We will load stylesheet in the controller
+
     }
 
     public Scene getScene() {

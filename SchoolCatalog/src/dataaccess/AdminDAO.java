@@ -2,6 +2,7 @@ package dataaccess;
 
 import connection.ConnectionFactory;
 import model.User;
+import util.PasswordUtil;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -15,12 +16,13 @@ public class AdminDAO {
         try {
             connection.setAutoCommit(false);
 
-            // 1. Insert into users
+
             int userId;
+            String hashedPassword = PasswordUtil.hash(user.getPassword());
             String userSql = "INSERT INTO users (username, password, role) VALUES (?,?,?)";
             try (PreparedStatement ps = connection.prepareStatement(userSql, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, user.getUsername());
-                ps.setString(2, user.getPassword());
+                ps.setString(2, hashedPassword);
                 ps.setString(3, user.getRole());
                 ps.executeUpdate();
                 ResultSet rs = ps.getGeneratedKeys();
@@ -28,7 +30,7 @@ public class AdminDAO {
                 else throw new Exception("Failed to insert user.");
             }
 
-            // 2. Insert into role-specific table
+
             if ("student".equalsIgnoreCase(user.getRole())) {
                 String sql = "INSERT INTO students (user_id, name, email, study_year, study_group) VALUES (?,?,?,?,?)";
                 try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -167,4 +169,73 @@ public class AdminDAO {
             return ps.executeUpdate() > 0;
         }
     }
+
+    public boolean updatePassword(int userId, String newHashedPassword) throws SQLException {
+        String sql = "UPDATE users SET password = ? WHERE id = ?";
+        try (Connection connection = ConnectionFactory.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, newHashedPassword);
+            ps.setInt(2, userId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public boolean updateStudentDetails(int userId, String name, String email,
+                                        int studyYear, String studyGroup) throws SQLException {
+        String sql = "UPDATE students SET name = ?, email = ?, study_year = ?, study_group = ? WHERE user_id = ?";
+        try (Connection connection = ConnectionFactory.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, name);
+            ps.setString(2, email);
+            ps.setInt(3, studyYear);
+            ps.setString(4, studyGroup);
+            ps.setInt(5, userId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public boolean updateTeacherDetails(int userId, String name, String email) throws SQLException {
+        String sql = "UPDATE teachers SET name = ?, email = ? WHERE user_id = ?";
+        try (Connection connection = ConnectionFactory.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, name);
+            ps.setString(2, email);
+            ps.setInt(3, userId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public String[] getStudentDetails(int userId) throws SQLException {
+        String sql = "SELECT name, email, study_year, study_group FROM students WHERE user_id = ?";
+        try (Connection connection = ConnectionFactory.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new String[]{
+                        rs.getString("name"),
+                        rs.getString("email"),
+                        String.valueOf(rs.getInt("study_year")),
+                        rs.getString("study_group")
+                    };
+                }
+            }
+        }
+        return null;
+    }
+
+    public String[] getTeacherDetails(int userId) throws SQLException {
+        String sql = "SELECT name, email FROM teachers WHERE user_id = ?";
+        try (Connection connection = ConnectionFactory.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new String[]{rs.getString("name"), rs.getString("email")};
+                }
+            }
+        }
+        return null;
+    }
 }
+

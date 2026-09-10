@@ -15,18 +15,18 @@ import java.util.List;
 public class AdminView {
     private Scene scene;
 
-    // --- Users table ---
+
     private TableView<User> usersTable;
 
-    // --- Add user form ---
+
     private TextField usernameField, passwordField, nameField, emailField;
     private ComboBox<String> roleBox;
     private Spinner<Integer> yearSpinner;
     private ComboBox<String> groupBox;
     private Label yearLabel, groupLabel;
-    private Button addButton, deleteButton, setSubjectTeacher, logoutButton;
+    private Button addButton, deleteButton, editButton, setSubjectTeacher, logoutButton, changePasswordButton;
 
-    // --- Enrollment tab ---
+
     private ComboBox<Subject> enrollSubjectBox;
     private ComboBox<Student> enrollStudentBox;
     private Button enrollButton, enrollAllButton, removeEnrollButton;
@@ -36,7 +36,7 @@ public class AdminView {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("root");
 
-        // Top bar
+
         HBox topBar = new HBox();
         topBar.getStyleClass().add("header-bar");
         Label titleLabel = new Label("Admin Dashboard");
@@ -48,7 +48,10 @@ public class AdminView {
         logoutButton = new Button("Logout");
         logoutButton.getStyleClass().addAll("button", "btn-danger");
         
-        topBar.getChildren().addAll(titleLabel, spacer, logoutButton);
+        changePasswordButton = new Button("🔑 Change Password");
+        changePasswordButton.getStyleClass().addAll("button", "btn-primary");
+        
+        topBar.getChildren().addAll(titleLabel, spacer, changePasswordButton, logoutButton);
         root.setTop(topBar);
 
         TabPane tabs = new TabPane();
@@ -70,7 +73,7 @@ public class AdminView {
     private BorderPane buildUsersTab() {
         BorderPane panel = new BorderPane();
 
-        // Left sidebar
+
         VBox sidebar = new VBox(15);
         sidebar.getStyleClass().add("sidebar");
         sidebar.setPrefWidth(260);
@@ -123,7 +126,11 @@ public class AdminView {
         setSubjectTeacher.getStyleClass().addAll("button", "btn-primary");
         setSubjectTeacher.setMaxWidth(Double.MAX_VALUE);
 
-        sidebar.getChildren().addAll(addButton, deleteButton, setSubjectTeacher);
+        editButton = new Button("✏ Edit Selected");
+        editButton.getStyleClass().addAll("button", "btn-primary");
+        editButton.setMaxWidth(Double.MAX_VALUE);
+
+        sidebar.getChildren().addAll(addButton, editButton, deleteButton, setSubjectTeacher);
 
         roleBox.setOnAction(e -> {
             boolean isStudent = "student".equals(roleBox.getValue());
@@ -133,9 +140,14 @@ public class AdminView {
             groupBox.setVisible(isStudent); groupBox.setManaged(isStudent);
         });
 
-        panel.setLeft(sidebar);
+        ScrollPane scrollSidebar = new ScrollPane(sidebar);
+        scrollSidebar.setFitToWidth(true);
+        scrollSidebar.setStyle("-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;");
+        scrollSidebar.setPrefWidth(280);
 
-        // Center table
+        panel.setLeft(scrollSidebar);
+
+
         usersTable = new TableView<>();
         usersTable.getStyleClass().add("table-view");
         
@@ -150,7 +162,7 @@ public class AdminView {
         TableColumn<User, String> roleCol = new TableColumn<>("Role");
         roleCol.setCellValueFactory(new PropertyValueFactory<>("role"));
         roleCol.setPrefWidth(100);
-        // Custom cell rendering for role badges could go here (in controller)
+
 
         TableColumn<User, String> extraCol = new TableColumn<>("Subject / Year-Group");
         extraCol.setCellValueFactory(cellData -> {
@@ -248,11 +260,13 @@ public class AdminView {
     
     public Button getAddButton() { return addButton; }
     public Button getDeleteButton() { return deleteButton; }
+    public Button getEditButton() { return editButton; }
     public Button getSetSubjectTeacherButton() { return setSubjectTeacher; }
     public Button getEnrollButton() { return enrollButton; }
     public Button getEnrollAllButton() { return enrollAllButton; }
     public Button getRemoveEnrollButton() { return removeEnrollButton; }
     public Button getLogoutButton() { return logoutButton; }
+    public Button getChangePasswordButton() { return changePasswordButton; }
     
     public ComboBox<Subject> getEnrollSubjectBox() { return enrollSubjectBox; }
     public ComboBox<Student> getEnrollStudentBox() { return enrollStudentBox; }

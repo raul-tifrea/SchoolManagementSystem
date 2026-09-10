@@ -15,6 +15,7 @@ import model.Subject;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.*;
+import util.PasswordUtil;
 
 public class TeacherController {
     private Stage stage;
@@ -25,7 +26,7 @@ public class TeacherController {
     private AbsenceDAO absenceDAO;
     private int teacherUserId;
 
-    // We store this to map studentName -> list of grade IDs
+
     private Map<String, List<Integer>> gradeIdMap = new HashMap<>();
 
     public TeacherController(TeacherView view, Stage stage, int teacherUserId) throws SQLException {
@@ -49,6 +50,7 @@ public class TeacherController {
     private void initListeners() {
         view.getSubjectCombo().setOnAction(e -> onSubjectChanged());
         view.getLogoutButton().setOnAction(e -> logout());
+        view.getChangePasswordButton().setOnAction(e -> changePassword());
 
         view.getAddGradeButton().setOnAction(e -> addGrade());
         view.getGradesTable().setOnMouseClicked(e -> {
@@ -253,6 +255,55 @@ public class TeacherController {
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void changePassword() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Change Password");
+        dialog.setHeaderText("Enter your current and new password");
+
+        ButtonType saveType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(saveType, ButtonType.CANCEL);
+
+        javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
+        grid.setHgap(10); grid.setVgap(10);
+        grid.setPadding(new javafx.geometry.Insets(20, 20, 10, 10));
+
+        PasswordField currentField = new PasswordField();
+        PasswordField newField = new PasswordField();
+        PasswordField confirmField = new PasswordField();
+
+        grid.add(new Label("Current Password:"), 0, 0); grid.add(currentField, 1, 0);
+        grid.add(new Label("New Password:"), 0, 1); grid.add(newField, 1, 1);
+        grid.add(new Label("Confirm Password:"), 0, 2); grid.add(confirmField, 1, 2);
+        dialog.getDialogPane().setContent(grid);
+
+        Optional<ButtonType> result = dialog.showAndWait();
+        if (result.isPresent() && result.get() == saveType) {
+            String current = currentField.getText();
+            String newPass = newField.getText();
+            String confirm = confirmField.getText();
+            if (current.isEmpty() || newPass.isEmpty() || confirm.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Error", "All fields are required.");
+                return;
+            }
+            if (!newPass.equals(confirm)) {
+                showAlert(Alert.AlertType.ERROR, "Error", "New passwords do not match.");
+                return;
+            }
+            try {
+                dataaccess.AdminDAO dao = new dataaccess.AdminDAO();
+                model.User u = dao.getUserById(teacherUserId);
+                if (u == null || !PasswordUtil.verify(current, u.getPassword())) {
+                    showAlert(Alert.AlertType.ERROR, "Error", "Current password is incorrect.");
+                    return;
+                }
+                dao.updatePassword(teacherUserId, PasswordUtil.hash(newPass));
+                showAlert(Alert.AlertType.INFORMATION, "Success", "Password changed successfully.");
+            } catch (SQLException ex) {
+                showAlert(Alert.AlertType.ERROR, "Error", "Database error: " + ex.getMessage());
+            }
         }
     }
 

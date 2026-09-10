@@ -16,17 +16,17 @@ import java.util.List;
 public class TeacherView {
     private Scene scene;
 
-    // Subject selector
-    private ComboBox<Subject> subjectCombo;
-    private Button logoutButton;
 
-    // Grades tab
+    private ComboBox<Subject> subjectCombo;
+    private Button logoutButton, changePasswordButton;
+
+
     private TableView<String[]> gradesTable;
     private ComboBox<Student> studentCombo;
     private TextField gradeField;
     private Button addGradeButton;
 
-    // Absences tab
+
     private TableView<Absence> absencesTable;
     private ComboBox<Student> absenceStudentCombo;
     private Button addAbsenceButton, deleteAbsenceButton, motivateAbsenceButton;
@@ -35,7 +35,7 @@ public class TeacherView {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("root");
 
-        // Top bar
+
         HBox topBar = new HBox(15);
         topBar.getStyleClass().add("header-bar");
         topBar.setPadding(new Insets(15, 20, 15, 20));
@@ -56,7 +56,10 @@ public class TeacherView {
         logoutButton = new Button("Logout");
         logoutButton.getStyleClass().addAll("button", "btn-danger");
         
-        topBar.getChildren().addAll(titleLabel, subLabel, subjectCombo, spacer, logoutButton);
+        changePasswordButton = new Button("🔑 Change Password");
+        changePasswordButton.getStyleClass().addAll("button", "btn-primary");
+
+        topBar.getChildren().addAll(titleLabel, subLabel, subjectCombo, spacer, changePasswordButton, logoutButton);
         root.setTop(topBar);
 
         TabPane tabs = new TabPane();
@@ -78,7 +81,7 @@ public class TeacherView {
     private BorderPane buildGradesTab() {
         BorderPane panel = new BorderPane();
 
-        // Form
+
         HBox form = new HBox(15);
         form.setPadding(new Insets(20));
         form.getStyleClass().add("card");
@@ -106,7 +109,7 @@ public class TeacherView {
         );
         panel.setTop(form);
 
-        // Table
+
         gradesTable = new TableView<>();
         gradesTable.getStyleClass().add("table-view");
         
@@ -137,7 +140,7 @@ public class TeacherView {
     private BorderPane buildAbsencesTab() {
         BorderPane panel = new BorderPane();
 
-        // Top Filter
+
         HBox filterBox = new HBox(15);
         filterBox.setPadding(new Insets(20));
         filterBox.getStyleClass().add("card");
@@ -161,7 +164,7 @@ public class TeacherView {
         );
         panel.setTop(filterBox);
 
-        // Table
+
         absencesTable = new TableView<>();
         absencesTable.getStyleClass().add("table-view");
         
@@ -202,15 +205,16 @@ public class TeacherView {
     
     public ComboBox<Subject> getSubjectCombo() { return subjectCombo; }
     public Button getLogoutButton() { return logoutButton; }
+    public Button getChangePasswordButton() { return changePasswordButton; }
     
-    // Grades
+
     public TableView<String[]> getGradesTable() { return gradesTable; }
     public ComboBox<Student> getStudentCombo() { return studentCombo; }
     public String getGradeField() { return gradeField.getText().trim(); }
     public void clearGradeField() { gradeField.clear(); }
     public Button getAddGradeButton() { return addGradeButton; }
     
-    // Absences
+
     public TableView<Absence> getAbsencesTable() { return absencesTable; }
     public ComboBox<Student> getAbsenceStudentCombo() { return absenceStudentCombo; }
     public Button getAddAbsenceButton() { return addAbsenceButton; }

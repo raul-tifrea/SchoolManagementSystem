@@ -4,8 +4,8 @@ public class Student {
     private int id;
     private String name;
     private String email;
-    private int studyYear;   // 9-12
-    private String studyGroup;  // A, B, C
+    private int studyYear;
+    private String studyGroup;
 
     public Student(int id, String name, String email, int studyYear, String studyGroup) {
         this.id = id;

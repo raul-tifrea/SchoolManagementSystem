@@ -23,13 +23,15 @@ public class AdminController {
     private AdminDAO dao;
     private SubjectDAO subjectDAO;
     private StudentDAO studentDAO;
+    private int adminUserId;
 
-    public AdminController(AdminView view, Stage stage) throws SQLException {
+    public AdminController(AdminView view, Stage stage, int adminUserId) throws SQLException {
         this.stage = stage;
         this.view = view;
         this.dao = new AdminDAO();
         this.subjectDAO = new SubjectDAO();
         this.studentDAO = new StudentDAO();
+        this.adminUserId = adminUserId;
 
         stage.setTitle("School Catalog - Admin Dashboard");
         stage.setScene(view.getScene());
@@ -61,6 +63,10 @@ public class AdminController {
         view.getEnrollSubjectBox().setOnAction(e -> {
             try { refreshEnrollmentsTable(); } catch (SQLException ex) { ex.printStackTrace(); }
         });
+        view.getEditButton().setOnAction(e -> {
+            try { editUser(); } catch (SQLException ex) { ex.printStackTrace(); }
+        });
+        view.getChangePasswordButton().setOnAction(e -> changePassword(adminUserId));
         view.getLogoutButton().setOnAction(e -> logout());
     }
 
@@ -237,6 +243,132 @@ public class AdminController {
             });
         }
         view.getEnrollmentsTable().setItems(FXCollections.observableArrayList(rows));
+    }
+
+    private void editUser() throws SQLException {
+        User selected = view.getUsersTable().getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Please select a user to edit.");
+            return;
+        }
+        if ("admin".equalsIgnoreCase(selected.getRole())) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Admin accounts cannot be edited here.");
+            return;
+        }
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Edit User");
+        dialog.setHeaderText("Editing: " + selected.getUsername() + " (" + selected.getRole() + ")");
+
+        ButtonType saveType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(saveType, ButtonType.CANCEL);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 20, 10, 10));
+
+        TextField nameField = new TextField();
+        TextField emailField = new TextField();
+        Spinner<Integer> yearSpinner = new Spinner<>(9, 12, 9);
+        ComboBox<String> groupBox = new ComboBox<>();
+        groupBox.getItems().addAll("A", "B", "C");
+        groupBox.setValue("A");
+
+        grid.add(new Label("Full Name:"), 0, 0); grid.add(nameField, 1, 0);
+        grid.add(new Label("Email:"), 0, 1); grid.add(emailField, 1, 1);
+
+        if ("student".equalsIgnoreCase(selected.getRole())) {
+            String[] details = dao.getStudentDetails(selected.getId());
+            if (details != null) {
+                nameField.setText(details[0]);
+                emailField.setText(details[1]);
+                yearSpinner.getValueFactory().setValue(Integer.parseInt(details[2]));
+                groupBox.setValue(details[3]);
+            }
+            grid.add(new Label("Class (9-12):"), 0, 2); grid.add(yearSpinner, 1, 2);
+            grid.add(new Label("Group (A-C):"), 0, 3); grid.add(groupBox, 1, 3);
+        } else {
+            String[] details = dao.getTeacherDetails(selected.getId());
+            if (details != null) {
+                nameField.setText(details[0]);
+                emailField.setText(details[1]);
+            }
+        }
+
+        dialog.getDialogPane().setContent(grid);
+        Optional<ButtonType> result = dialog.showAndWait();
+        if (result.isPresent() && result.get() == saveType) {
+            String name = nameField.getText().trim();
+            String email = emailField.getText().trim();
+            if (name.isEmpty() || email.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Error", "Name and email cannot be empty.");
+                return;
+            }
+            boolean updated;
+            if ("student".equalsIgnoreCase(selected.getRole())) {
+                updated = dao.updateStudentDetails(selected.getId(), name, email,
+                        yearSpinner.getValue(), groupBox.getValue());
+            } else {
+                updated = dao.updateTeacherDetails(selected.getId(), name, email);
+            }
+            if (updated) {
+                showAlert(Alert.AlertType.INFORMATION, "Success", "User updated successfully.");
+                refreshUsersTable();
+                refreshEnrollmentCombos();
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Error", "Failed to update user.");
+            }
+        }
+    }
+
+    private void changePassword(int userId) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Change Password");
+        dialog.setHeaderText("Enter your current and new password");
+
+        ButtonType saveType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(saveType, ButtonType.CANCEL);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 20, 10, 10));
+
+        PasswordField currentField = new PasswordField();
+        PasswordField newField = new PasswordField();
+        PasswordField confirmField = new PasswordField();
+
+        grid.add(new Label("Current Password:"), 0, 0); grid.add(currentField, 1, 0);
+        grid.add(new Label("New Password:"), 0, 1); grid.add(newField, 1, 1);
+        grid.add(new Label("Confirm Password:"), 0, 2); grid.add(confirmField, 1, 2);
+        dialog.getDialogPane().setContent(grid);
+
+        Optional<ButtonType> result = dialog.showAndWait();
+        if (result.isPresent() && result.get() == saveType) {
+            String current = currentField.getText();
+            String newPass = newField.getText();
+            String confirm = confirmField.getText();
+            if (current.isEmpty() || newPass.isEmpty() || confirm.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Error", "All fields are required.");
+                return;
+            }
+            if (!newPass.equals(confirm)) {
+                showAlert(Alert.AlertType.ERROR, "Error", "New passwords do not match.");
+                return;
+            }
+            try {
+                User u = dao.getUserById(userId);
+                if (u == null || !util.PasswordUtil.verify(current, u.getPassword())) {
+                    showAlert(Alert.AlertType.ERROR, "Error", "Current password is incorrect.");
+                    return;
+                }
+                dao.updatePassword(userId, util.PasswordUtil.hash(newPass));
+                showAlert(Alert.AlertType.INFORMATION, "Success", "Password changed successfully.");
+            } catch (SQLException ex) {
+                showAlert(Alert.AlertType.ERROR, "Error", "Database error: " + ex.getMessage());
+            }
+        }
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {

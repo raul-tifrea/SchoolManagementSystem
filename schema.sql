@@ -98,7 +98,7 @@ CREATE TABLE absences (
 -- -------------------------------------------------------
 -- Bootstrap: default admin account
 -- -------------------------------------------------------
-INSERT INTO users (username, password, role) VALUES ('admin', '0000', 'admin');
+INSERT INTO users (username, password, role) VALUES ('admin', '$2a$12$9Q3Ql7iR8yv1c2KhVYJOB.kNh0USJlFJq5Ul9FS7hVFiH5ZqP8QC6', 'admin');
 
 -- -------------------------------------------------------
 -- Verification queries (run these to confirm setup)

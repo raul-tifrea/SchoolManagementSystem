@@ -33,7 +33,7 @@ public class LoginController {
     private void initListeners() {
         view.getLoginButton().setOnAction(e -> login());
         
-        // Login on Enter key
+
         view.getScene().setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.ENTER) {
                 login();
@@ -68,7 +68,7 @@ public class LoginController {
         try {
             if ("admin".equals(role)) {
                 AdminView adminView = new AdminView();
-                new AdminController(adminView, stage);
+                new AdminController(adminView, stage, userId);
             } else if ("teacher".equals(role)) {
                 TeacherView teacherView = new TeacherView();
                 new TeacherController(teacherView, stage, userId);

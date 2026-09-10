@@ -12,6 +12,8 @@ import model.Subject;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
+import util.PasswordUtil;
 
 public class StudentController {
     private Stage stage;
@@ -40,6 +42,7 @@ public class StudentController {
 
     private void initListeners() {
         view.getLogoutButton().setOnAction(e -> logout());
+        view.getChangePasswordButton().setOnAction(e -> changePassword());
         view.getSubjectBox().setOnAction(e -> loadGrades());
         view.getAbsenceSubjectBox().setOnAction(e -> loadAbsences());
     }
@@ -80,7 +83,7 @@ public class StudentController {
                 double avg = sum / grades.size();
                 view.getGpaLabel().setText(String.format("GPA: %.2f", avg));
                 
-                // Color code the GPA banner
+
                 view.getGpaBanner().getStyleClass().removeAll("gpa-high", "gpa-medium", "gpa-low");
                 if (avg >= 7.0) {
                     view.getGpaBanner().getStyleClass().add("gpa-high");
@@ -114,6 +117,55 @@ public class StudentController {
             );
         } catch (Exception e) {
             showAlert(Alert.AlertType.ERROR, "Error", "Error loading absences.");
+        }
+    }
+
+    private void changePassword() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Change Password");
+        dialog.setHeaderText("Enter your current and new password");
+
+        ButtonType saveType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(saveType, ButtonType.CANCEL);
+
+        javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
+        grid.setHgap(10); grid.setVgap(10);
+        grid.setPadding(new javafx.geometry.Insets(20, 20, 10, 10));
+
+        javafx.scene.control.PasswordField currentField = new javafx.scene.control.PasswordField();
+        javafx.scene.control.PasswordField newField = new javafx.scene.control.PasswordField();
+        javafx.scene.control.PasswordField confirmField = new javafx.scene.control.PasswordField();
+
+        grid.add(new javafx.scene.control.Label("Current Password:"), 0, 0); grid.add(currentField, 1, 0);
+        grid.add(new javafx.scene.control.Label("New Password:"), 0, 1); grid.add(newField, 1, 1);
+        grid.add(new javafx.scene.control.Label("Confirm Password:"), 0, 2); grid.add(confirmField, 1, 2);
+        dialog.getDialogPane().setContent(grid);
+
+        Optional<ButtonType> result = dialog.showAndWait();
+        if (result.isPresent() && result.get() == saveType) {
+            String current = currentField.getText();
+            String newPass = newField.getText();
+            String confirm = confirmField.getText();
+            if (current.isEmpty() || newPass.isEmpty() || confirm.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Error", "All fields are required.");
+                return;
+            }
+            if (!newPass.equals(confirm)) {
+                showAlert(Alert.AlertType.ERROR, "Error", "New passwords do not match.");
+                return;
+            }
+            try {
+                dataaccess.AdminDAO dao = new dataaccess.AdminDAO();
+                model.User u = dao.getUserById(studentUserId);
+                if (u == null || !PasswordUtil.verify(current, u.getPassword())) {
+                    showAlert(Alert.AlertType.ERROR, "Error", "Current password is incorrect.");
+                    return;
+                }
+                dao.updatePassword(studentUserId, PasswordUtil.hash(newPass));
+                showAlert(Alert.AlertType.INFORMATION, "Success", "Password changed successfully.");
+            } catch (SQLException ex) {
+                showAlert(Alert.AlertType.ERROR, "Error", "Database error: " + ex.getMessage());
+            }
         }
     }
 

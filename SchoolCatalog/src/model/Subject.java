@@ -3,7 +3,7 @@ package model;
 public class Subject {
     private int id;
     private String name;
-    private int studyYear;  // 1-4, which year this subject belongs to
+    private int studyYear;
 
     public Subject(int id, String name, int studyYear) {
         this.id = id;

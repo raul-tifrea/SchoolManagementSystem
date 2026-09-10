@@ -13,15 +13,15 @@ import model.Subject;
 
 public class StudentView {
     private Scene scene;
-    private Button logoutButton;
+    private Button logoutButton, changePasswordButton;
 
-    // Grades tab
+
     private ComboBox<Subject> subjectBox;
     private TableView<Grade> gradesTable;
     private Label gpaLabel;
     private HBox gpaBanner;
 
-    // Absences tab
+
     private ComboBox<Subject> absenceSubjectBox;
     private TableView<Absence> absencesTable;
     private Label absenceSummaryLabel;
@@ -30,7 +30,7 @@ public class StudentView {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("root");
 
-        // Top bar
+
         HBox topBar = new HBox(15);
         topBar.getStyleClass().add("header-bar");
         topBar.setPadding(new Insets(15, 20, 15, 20));
@@ -44,7 +44,10 @@ public class StudentView {
         logoutButton = new Button("Logout");
         logoutButton.getStyleClass().addAll("button", "btn-danger");
         
-        topBar.getChildren().addAll(titleLabel, spacer, logoutButton);
+        changePasswordButton = new Button("🔑 Change Password");
+        changePasswordButton.getStyleClass().addAll("button", "btn-primary");
+        
+        topBar.getChildren().addAll(titleLabel, spacer, changePasswordButton, logoutButton);
         root.setTop(topBar);
 
         TabPane tabs = new TabPane();
@@ -66,7 +69,7 @@ public class StudentView {
     private BorderPane buildGradesTab() {
         BorderPane panel = new BorderPane();
 
-        // GPA Banner
+
         gpaBanner = new HBox();
         gpaBanner.setAlignment(Pos.CENTER);
         gpaBanner.setPadding(new Insets(15));
@@ -78,7 +81,7 @@ public class StudentView {
         
         panel.setTop(gpaBanner);
 
-        // Table
+
         gradesTable = new TableView<>();
         gradesTable.getStyleClass().add("table-view");
         
@@ -94,7 +97,7 @@ public class StudentView {
         VBox.setVgrow(gradesTable, Priority.ALWAYS);
         panel.setCenter(tableContainer);
 
-        // Bottom subject selector
+
         HBox bottom = new HBox(15);
         bottom.setPadding(new Insets(20));
         bottom.getStyleClass().add("card");
@@ -112,7 +115,7 @@ public class StudentView {
     private BorderPane buildAbsencesTab() {
         BorderPane panel = new BorderPane();
 
-        // Summary Banner
+
         HBox summaryBanner = new HBox();
         summaryBanner.setAlignment(Pos.CENTER);
         summaryBanner.setPadding(new Insets(15));
@@ -124,7 +127,7 @@ public class StudentView {
         
         panel.setTop(summaryBanner);
 
-        // Table
+
         absencesTable = new TableView<>();
         absencesTable.getStyleClass().add("table-view");
         
@@ -143,7 +146,7 @@ public class StudentView {
         VBox.setVgrow(absencesTable, Priority.ALWAYS);
         panel.setCenter(tableContainer);
 
-        // Bottom subject selector
+
         HBox bottom = new HBox(15);
         bottom.setPadding(new Insets(20));
         bottom.getStyleClass().add("card");
@@ -166,6 +169,7 @@ public class StudentView {
 
     public Scene getScene() { return scene; }
     public Button getLogoutButton() { return logoutButton; }
+    public Button getChangePasswordButton() { return changePasswordButton; }
     
     public ComboBox<Subject> getSubjectBox() { return subjectBox; }
     public TableView<Grade> getGradesTable() { return gradesTable; }
