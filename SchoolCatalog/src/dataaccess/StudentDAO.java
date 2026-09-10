@@ -1,7 +1,6 @@
 package dataaccess;
 
 import connection.ConnectionFactory;
-import model.Grade;
 import model.Student;
 
 import java.sql.Connection;
@@ -11,19 +10,26 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StudentDAO{
+public class StudentDAO {
 
-    public List<Student> getStudentsForTeacher(int teacherUserId) throws SQLException {
+    public List<Student> getStudentsForSubject(int subjectId) throws SQLException {
         List<Student> students = new ArrayList<>();
-        String sql = "SELECT id, name, email FROM students ORDER BY name";
+        String sql = "SELECT st.id, st.name, st.email, st.study_year, st.study_group " +
+                     "FROM students st " +
+                     "JOIN enrollments e ON e.student_id = st.id " +
+                     "WHERE e.subject_id = ? " +
+                     "ORDER BY st.study_group, st.name";
         try (Connection connection = ConnectionFactory.getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, subjectId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     students.add(new Student(
                             rs.getInt("id"),
                             rs.getString("name"),
-                            rs.getString("email")
+                            rs.getString("email"),
+                            rs.getInt("study_year"),
+                            rs.getInt("study_group")
                     ));
                 }
             }
@@ -31,7 +37,22 @@ public class StudentDAO{
         return students;
     }
 
-
-
-
+    public List<Student> getAllStudents() throws SQLException {
+        List<Student> students = new ArrayList<>();
+        String sql = "SELECT id, name, email, study_year, study_group FROM students ORDER BY study_year, study_group, name";
+        try (Connection connection = ConnectionFactory.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                students.add(new Student(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("email"),
+                        rs.getInt("study_year"),
+                        rs.getInt("study_group")
+                ));
+            }
+        }
+        return students;
+    }
 }

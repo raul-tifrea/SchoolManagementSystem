@@ -1,27 +1,21 @@
 package model;
 
-import java.util.ArrayList;
-
 public class Subject {
     private int id;
     private String name;
+    private int studyYear;  // 1-4, which year this subject belongs to
 
-
-    public Subject(int id, String name) {
+    public Subject(int id, String name, int studyYear) {
         this.id = id;
         this.name = name;
+        this.studyYear = studyYear;
     }
 
-    public int getId() {
-        return id;
-    }
+    public int getId()         { return id; }
+    public int getStudyYear()  { return studyYear; }
 
     @Override
     public String toString() {
-        return name;
+        return name + " (Year " + studyYear + ")";
     }
-
-
-
-
 }

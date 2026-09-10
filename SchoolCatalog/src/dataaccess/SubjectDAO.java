@@ -12,22 +12,67 @@ import java.util.List;
 
 public class SubjectDAO {
 
-
-
-    public List<Subject> getSubjectsForStudent(int studentId) throws SQLException{
+    public List<Subject> getSubjectsForStudent(int userId) throws SQLException {
         List<Subject> subjects = new ArrayList<>();
-        String query = "SELECT DISTINCT sub.id, sub.name FROM subjects sub JOIN grades g ON sub.id = g.subject_id JOIN students st ON g.student_id = st.id WHERE st.user_id = ? ORDER BY sub.name";
-        try(Connection connection = ConnectionFactory.getConnection();
-            PreparedStatement statement = connection.prepareStatement(query)){
-            statement.setInt(1, studentId);
-            try(ResultSet result = statement.executeQuery()){
-                while(result.next()){
-                    subjects.add(new Subject(result.getInt("id"), result.getString("name")));
+        String sql = "SELECT sub.id, sub.name, sub.study_year " +
+                     "FROM subjects sub " +
+                     "JOIN enrollments e ON e.subject_id = sub.id " +
+                     "JOIN students st ON e.student_id = st.id " +
+                     "WHERE st.user_id = ? " +
+                     "ORDER BY sub.name";
+        try (Connection connection = ConnectionFactory.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    subjects.add(new Subject(
+                            rs.getInt("id"),
+                            rs.getString("name"),
+                            rs.getInt("study_year")
+                    ));
                 }
             }
-            return subjects;
         }
+        return subjects;
     }
 
+    public List<Subject> getSubjectsForTeacher(int userId) throws SQLException {
+        List<Subject> subjects = new ArrayList<>();
+        String sql = "SELECT sub.id, sub.name, sub.study_year " +
+                     "FROM subjects sub " +
+                     "JOIN teachers t ON sub.teacher_id = t.id " +
+                     "WHERE t.user_id = ? " +
+                     "ORDER BY sub.study_year, sub.name";
+        try (Connection connection = ConnectionFactory.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    subjects.add(new Subject(
+                            rs.getInt("id"),
+                            rs.getString("name"),
+                            rs.getInt("study_year")
+                    ));
+                }
+            }
+        }
+        return subjects;
+    }
 
+    public List<Subject> getAllSubjects() throws SQLException {
+        List<Subject> subjects = new ArrayList<>();
+        String sql = "SELECT id, name, study_year FROM subjects ORDER BY study_year, name";
+        try (Connection connection = ConnectionFactory.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                subjects.add(new Subject(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getInt("study_year")
+                ));
+            }
+        }
+        return subjects;
+    }
 }

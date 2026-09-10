@@ -1,8 +1,8 @@
 package presentation;
 
+import model.Student;
 import model.Subject;
 import model.User;
-
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -11,170 +11,231 @@ import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.util.List;
 
-public class AdminView extends JPanel{
+public class AdminView extends JPanel {
 
-    private JTable table;
-    private DefaultTableModel model;
+    // --- Users table ---
+    private JTable usersTable;
+    private DefaultTableModel usersModel;
 
+    // --- Add user form ---
     private JTextField usernameField;
     private JTextField passwordField;
     private JTextField nameField;
     private JTextField emailField;
+    private JComboBox<String> roleBox;
+    private JSpinner yearSpinner;
+    private JSpinner groupSpinner;
+    private JLabel yearLabel;
+    private JLabel groupLabel;
     private JButton addButton;
     private JButton deleteButton;
-    private JComboBox<String> roleBox;
+
+    // --- Subject assignment ---
     private JButton setSubjectTeacher;
 
-    public AdminView(){
+    // --- Enrollment tab ---
+    private JComboBox<Subject> enrollSubjectBox;
+    private JComboBox<Student> enrollStudentBox;
+    private JButton enrollButton;
+    private JButton enrollAllButton;
+    private JButton removeEnrollButton;
+    private JTable enrollmentsTable;
+    private DefaultTableModel enrollmentsModel;
+
+    public AdminView() {
         setLayout(new BorderLayout());
-        Object[] cols = new Object[]{"Username","Role","Subject"};
-        model = new DefaultTableModel(cols,0);
-        table = new JTable(model);
-        table.setBackground(new Color(255, 255, 255));
-        table.setBorder(BorderFactory.createMatteBorder(1,1,1,1,Color.BLACK));
-        table.setFont(new Font("", Font.PLAIN, 14));
-        table.setRowHeight(30);
-        JTableHeader tableHeader = table.getTableHeader();
-        tableHeader.setFont(new Font("", Font.BOLD, 16));
-        DefaultTableCellRenderer headerRenderer = (DefaultTableCellRenderer) tableHeader.getDefaultRenderer();
-        headerRenderer.setHorizontalAlignment(JLabel.CENTER);
-        table.getTableHeader().setDefaultRenderer(headerRenderer);
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-        table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
-        table.getColumnModel().getColumn(1).setCellRenderer(centerRenderer);
-        table.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
-        add(new JScrollPane(table), BorderLayout.CENTER);
+        JTabbedPane tabs = new JTabbedPane();
 
-        JPanel formPanel = new JPanel(new FlowLayout());
+        // ── Tab 1: Users ──────────────────────────────────────────────────────
+        JPanel usersPanel = new JPanel(new BorderLayout());
+
+        Object[] cols = {"ID", "Username", "Role", "Subject / Year-Group"};
+        usersModel = new DefaultTableModel(cols, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+        };
+        usersTable = new JTable(usersModel);
+        styleTable(usersTable);
+        usersTable.getColumnModel().getColumn(0).setMinWidth(0);
+        usersTable.getColumnModel().getColumn(0).setMaxWidth(0); // hide ID column
+        usersPanel.add(new JScrollPane(usersTable), BorderLayout.CENTER);
+
+        // Add-user form
+        JPanel formPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
         formPanel.setBackground(new Color(98, 0, 205));
-        usernameField = new JTextField(8);
-        usernameField.setFont(new Font("", Font.PLAIN, 14));
 
-        usernameField.setBorder(BorderFactory.createMatteBorder(2,2,2,2,Color.BLACK));
+        usernameField = new JTextField(8); styleField(usernameField);
+        passwordField = new JTextField(8); styleField(passwordField);
+        nameField     = new JTextField(8); styleField(nameField);
+        emailField    = new JTextField(8); styleField(emailField);
 
-        passwordField = new JTextField(8);
-        passwordField.setBorder(BorderFactory.createMatteBorder(2,2,2,2,Color.BLACK));
-        passwordField.setFont(new Font("", Font.PLAIN, 14));
+        roleBox = new JComboBox<>(new String[]{"student", "teacher"});
+        roleBox.setFont(new Font("", Font.PLAIN, 13));
+        roleBox.setPreferredSize(new Dimension(90, 28));
 
+        yearSpinner  = new JSpinner(new SpinnerNumberModel(1, 1, 4, 1));
+        groupSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 5, 1));
+        yearSpinner.setPreferredSize(new Dimension(50, 28));
+        groupSpinner.setPreferredSize(new Dimension(50, 28));
 
-        nameField = new JTextField(8);
-        nameField.setFont(new Font("", Font.PLAIN, 14));
+        yearLabel  = makeLabel("Year");
+        groupLabel = makeLabel("Group");
 
-        nameField.setBorder(BorderFactory.createMatteBorder(2,2,2,2,Color.BLACK));
+        addButton    = makeButton("Add User");
+        deleteButton = makeButton("Delete User");
+        setSubjectTeacher = makeButton("Assign Subject");
 
-        emailField = new JTextField(8);
-        emailField.setFont(new Font("", Font.PLAIN, 14));
-
-        emailField.setBorder(BorderFactory.createMatteBorder(2,2,2,2,Color.BLACK));
-
-        roleBox = new JComboBox<>(new String[]{"student","teacher"});
-        roleBox.setBorder(BorderFactory.createMatteBorder(2,2,2,2,Color.BLACK));
-        roleBox.setPreferredSize(new Dimension(100, 20));
-        roleBox.setFont(new Font("", Font.PLAIN, 14));
-
-        addButton = new JButton("Add User");
-        addButton.setBorder(BorderFactory.createSoftBevelBorder(0));
-        addButton.setPreferredSize(new Dimension(130, 40));
-        addButton.setFont(new Font("", Font.PLAIN, 14));
-
-
-        deleteButton = new JButton("Delete User");
-        deleteButton.setBorder(BorderFactory.createSoftBevelBorder(0));
-        deleteButton.setPreferredSize(new Dimension(130, 40));
-        deleteButton.setFont(new Font("", Font.PLAIN, 14));
-
-        setSubjectTeacher = new JButton("Set Subject Teacher");
-        setSubjectTeacher.setBorder(BorderFactory.createSoftBevelBorder(0));
-        setSubjectTeacher.setPreferredSize(new Dimension(150, 40));
-        setSubjectTeacher.setFont(new Font("", Font.PLAIN, 14));
-
-        JLabel username = new JLabel("Username");
-        username.setFont(new Font("", Font.BOLD, 14));
-        username.setForeground(Color.WHITE);
-        formPanel.add(username);
-        formPanel.add(usernameField);
-
-        JLabel password = new JLabel("Password");
-        password.setFont(new Font("", Font.BOLD, 14));
-        password.setForeground(Color.WHITE);
-        formPanel.add(password);
-        formPanel.add(passwordField);
-
-        JLabel name = new JLabel("Name");
-        name.setFont(new Font("", Font.BOLD, 14));
-        name.setForeground(Color.WHITE);
-        formPanel.add(name);
-        formPanel.add(nameField);
-
-        JLabel email = new JLabel("Email");
-        email.setFont(new Font("", Font.BOLD, 14));
-        email.setForeground(Color.WHITE);
-        formPanel.add(email);
-        formPanel.add(emailField);
-
-        JLabel role = new JLabel("Role");
-        role.setFont(new Font("", Font.BOLD, 14));
-        role.setForeground(Color.WHITE);
-        formPanel.add(role);
-        formPanel.add(roleBox);
+        formPanel.add(makeLabel("Username")); formPanel.add(usernameField);
+        formPanel.add(makeLabel("Password")); formPanel.add(passwordField);
+        formPanel.add(makeLabel("Name"));     formPanel.add(nameField);
+        formPanel.add(makeLabel("Email"));    formPanel.add(emailField);
+        formPanel.add(makeLabel("Role"));     formPanel.add(roleBox);
+        formPanel.add(yearLabel);             formPanel.add(yearSpinner);
+        formPanel.add(groupLabel);            formPanel.add(groupSpinner);
         formPanel.add(addButton);
         formPanel.add(deleteButton);
         formPanel.add(setSubjectTeacher);
 
-        add(formPanel, BorderLayout.SOUTH);
+        usersPanel.add(formPanel, BorderLayout.SOUTH);
 
+        // Show/hide year+group spinners based on role
+        roleBox.addActionListener(e -> {
+            boolean isStudent = "student".equals(roleBox.getSelectedItem());
+            yearLabel.setVisible(isStudent);
+            yearSpinner.setVisible(isStudent);
+            groupLabel.setVisible(isStudent);
+            groupSpinner.setVisible(isStudent);
+        });
+        // Initial state: student selected by default
+        yearLabel.setVisible(true); yearSpinner.setVisible(true);
+        groupLabel.setVisible(true); groupSpinner.setVisible(true);
+
+        // ── Tab 2: Enrollments ────────────────────────────────────────────────
+        JPanel enrollPanel = new JPanel(new BorderLayout());
+
+        Object[] eCols = {"Student", "Subject"};
+        enrollmentsModel = new DefaultTableModel(eCols, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+        };
+        enrollmentsTable = new JTable(enrollmentsModel);
+        styleTable(enrollmentsTable);
+        enrollPanel.add(new JScrollPane(enrollmentsTable), BorderLayout.CENTER);
+
+        JPanel enrollFormPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
+        enrollFormPanel.setBackground(new Color(98, 0, 205));
+
+        enrollSubjectBox = new JComboBox<>();
+        enrollSubjectBox.setPreferredSize(new Dimension(160, 28));
+        enrollSubjectBox.setFont(new Font("", Font.PLAIN, 13));
+
+        enrollStudentBox = new JComboBox<>();
+        enrollStudentBox.setPreferredSize(new Dimension(160, 28));
+        enrollStudentBox.setFont(new Font("", Font.PLAIN, 13));
+
+        enrollButton       = makeButton("Enroll Student");
+        enrollAllButton    = makeButton("Enroll All (Year)");
+        removeEnrollButton = makeButton("Remove Enrollment");
+
+        enrollFormPanel.add(makeLabel("Subject")); enrollFormPanel.add(enrollSubjectBox);
+        enrollFormPanel.add(makeLabel("Student")); enrollFormPanel.add(enrollStudentBox);
+        enrollFormPanel.add(enrollButton);
+        enrollFormPanel.add(enrollAllButton);
+        enrollFormPanel.add(removeEnrollButton);
+        enrollPanel.add(enrollFormPanel, BorderLayout.SOUTH);
+
+        tabs.addTab("Users", usersPanel);
+        tabs.addTab("Enrollments", enrollPanel);
+        add(tabs, BorderLayout.CENTER);
     }
 
-    public JButton getSetSubjectTeacherButton(){
-        return setSubjectTeacher;
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    private void styleTable(JTable t) {
+        t.setFont(new Font("", Font.PLAIN, 13));
+        t.setRowHeight(28);
+        t.setShowGrid(false);
+        JTableHeader h = t.getTableHeader();
+        h.setFont(new Font("", Font.BOLD, 14));
+        DefaultTableCellRenderer cr = new DefaultTableCellRenderer();
+        cr.setHorizontalAlignment(JLabel.CENTER);
+        for (int i = 0; i < t.getColumnCount(); i++) t.getColumnModel().getColumn(i).setCellRenderer(cr);
+        ((DefaultTableCellRenderer) h.getDefaultRenderer()).setHorizontalAlignment(JLabel.CENTER);
     }
 
-    public int getSelectedUserId(){
-        int row = table.getSelectedRow();
-        if(row == -1){
-            return -1;
-        }
-        return (int) table.getValueAt(row, 0);
+    private void styleField(JTextField f) {
+        f.setFont(new Font("", Font.PLAIN, 13));
+        f.setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, Color.BLACK));
     }
 
-    public void updateTable(List<User> users) {
-        model.setRowCount(0);
+    private JLabel makeLabel(String text) {
+        JLabel l = new JLabel(text);
+        l.setFont(new Font("", Font.BOLD, 13));
+        l.setForeground(Color.WHITE);
+        return l;
+    }
+
+    private JButton makeButton(String text) {
+        JButton b = new JButton(text);
+        b.setFont(new Font("", Font.PLAIN, 13));
+        b.setPreferredSize(new Dimension(150, 36));
+        b.setBorder(BorderFactory.createSoftBevelBorder(0));
+        return b;
+    }
+
+    // ── Public API ────────────────────────────────────────────────────────────
+    public void updateUsersTable(List<User> users) {
+        usersModel.setRowCount(0);
         for (User u : users) {
-            String subject = (u.getSubject() != null) ? u.getSubject() : "-";
-            model.addRow(new Object[]{u.getUsername(), u.getRole(), subject});
+            String extra = "-";
+            if ("teacher".equalsIgnoreCase(u.getRole()) && u.getSubject() != null)
+                extra = u.getSubject();
+            usersModel.addRow(new Object[]{u.getId(), u.getUsername(), u.getRole(), extra});
         }
     }
 
-    public void clearForm(){
-        usernameField.setText("");
-        passwordField.setText("");
-        nameField.setText("");
-        emailField.setText("");
+    /** Returns the user ID from the hidden column 0 of the selected row, or -1. */
+    public int getSelectedUserId() {
+        int row = usersTable.getSelectedRow();
+        return (row == -1) ? -1 : (int) usersTable.getValueAt(row, 0);
+    }
+
+    public void updateEnrollmentsTable(List<String[]> rows) {
+        enrollmentsModel.setRowCount(0);
+        for (String[] r : rows) enrollmentsModel.addRow(r);
+    }
+
+    public void populateSubjectBox(List<Subject> subjects) {
+        enrollSubjectBox.removeAllItems();
+        for (Subject s : subjects) enrollSubjectBox.addItem(s);
+    }
+
+    public void populateStudentBox(List<Student> students) {
+        enrollStudentBox.removeAllItems();
+        for (Student s : students) enrollStudentBox.addItem(s);
+    }
+
+    public Subject getSelectedEnrollSubject() { return (Subject) enrollSubjectBox.getSelectedItem(); }
+    public Student getSelectedEnrollStudent() { return (Student) enrollStudentBox.getSelectedItem(); }
+
+    public void clearForm() {
+        usernameField.setText(""); passwordField.setText("");
+        nameField.setText("");     emailField.setText("");
         roleBox.setSelectedIndex(0);
-    }
-    public JButton getAddButton() {
-        return addButton;
-    }
-    public JButton getDeleteButton() {
-        return deleteButton;
+        yearSpinner.setValue(1);   groupSpinner.setValue(1);
     }
 
-    public String getUsername() {
-        return usernameField.getText();
-    }
-    public String getPassword() {
-        return passwordField.getText();
-    }
+    // Getters for controller
+    public JButton getAddButton()              { return addButton; }
+    public JButton getDeleteButton()           { return deleteButton; }
+    public JButton getSetSubjectTeacherButton(){ return setSubjectTeacher; }
+    public JButton getEnrollButton()           { return enrollButton; }
+    public JButton getEnrollAllButton()        { return enrollAllButton; }
+    public JButton getRemoveEnrollButton()     { return removeEnrollButton; }
+    public JComboBox<Subject> getEnrollSubjectBox() { return enrollSubjectBox; }
 
-    public String getName() {
-        return nameField.getText();
-    }
-    public String getEmail() {
-        return emailField.getText();
-    }
-    public String getRole() {
-        return (String) roleBox.getSelectedItem();
-    }
-
+    public String getUsername() { return usernameField.getText().trim(); }
+    public String getPassword() { return passwordField.getText().trim(); }
+    public String getName()     { return nameField.getText().trim(); }
+    public String getEmail()    { return emailField.getText().trim(); }
+    public String getRole()     { return (String) roleBox.getSelectedItem(); }
+    public int    getYear()     { return (int) yearSpinner.getValue(); }
+    public int    getGroup()    { return (int) groupSpinner.getValue(); }
 }

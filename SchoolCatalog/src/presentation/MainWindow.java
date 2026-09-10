@@ -155,7 +155,7 @@ public class MainWindow extends JFrame {
 
         UserDAO userDAO = new UserDAO();
         try {
-            User user = userDAO.login(username, password, role);
+            User user = userDAO.login(username, password, role.toLowerCase());
             if (user == null) {
                 JOptionPane.showMessageDialog(this, "Invalid username or password", "Error", JOptionPane.ERROR_MESSAGE);
             } else {
@@ -185,25 +185,22 @@ public class MainWindow extends JFrame {
         MainPane.setBorder(BorderFactory.createEmptyBorder());
 
 
-        if(role.equals("admin")){
+        if("admin".equalsIgnoreCase(role)){
             if(AdminView == null){
                 AdminView = new AdminView();
                 new AdminController(AdminView);
-
-
             }
             MainPane.addTab("Admin", AdminView);
-        } else if(role.equals("teacher")){
+        } else if("teacher".equalsIgnoreCase(role)){
             if(teacherView == null){
                 teacherView = new TeacherView();
-                 new TeacherController(teacherView,userId);
-
+                new TeacherController(teacherView, userId);
             }
             MainPane.addTab("Teacher", teacherView);
-        } else if(role.equals("student")){
+        } else if("student".equalsIgnoreCase(role)){
             if(studentView == null){
                 studentView = new StudentView();
-                new StudentController(studentView,userId);
+                new StudentController(studentView, userId);
             }
             MainPane.addTab("Student", studentView);
         }

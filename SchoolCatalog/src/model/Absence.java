@@ -4,26 +4,22 @@ import java.time.LocalDate;
 
 public class Absence {
     private int id;
-    private String studentname;
-    private String subjectname;
+    private String studentName;
+    private String subjectName;
     private LocalDate date;
+    private boolean motivated;
 
-    public Absence(int id, String studentname, String subjectname, LocalDate date){
+    public Absence(int id, String studentName, String subjectName, LocalDate date, boolean motivated) {
         this.id = id;
-        this.studentname = studentname;
-        this.subjectname = subjectname;
+        this.studentName = studentName;
+        this.subjectName = subjectName;
         this.date = date;
+        this.motivated = motivated;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public String getSubjectname(){
-        return subjectname;
-    }
-
-    public LocalDate getDate(){
-        return date;
-    }
+    public int getId()              { return id; }
+    public String getStudentName()  { return studentName; }
+    public String getSubjectName()  { return subjectName; }
+    public LocalDate getDate()      { return date; }
+    public boolean isMotivated()    { return motivated; }
 }
