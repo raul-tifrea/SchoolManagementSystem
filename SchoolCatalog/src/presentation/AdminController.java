@@ -3,26 +3,38 @@ package presentation;
 import dataaccess.AdminDAO;
 import dataaccess.StudentDAO;
 import dataaccess.SubjectDAO;
+import javafx.collections.FXCollections;
+import javafx.geometry.Insets;
+import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
+import javafx.stage.Stage;
 import model.Student;
 import model.Subject;
 import model.User;
 
-import javax.swing.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class AdminController {
-    private final AdminView view;
-    private final AdminDAO  dao;
-    private final SubjectDAO subjectDAO;
-    private final StudentDAO studentDAO;
+    private Stage stage;
+    private AdminView view;
+    private AdminDAO dao;
+    private SubjectDAO subjectDAO;
+    private StudentDAO studentDAO;
 
-    public AdminController(AdminView view) throws SQLException {
-        this.view       = view;
-        this.dao        = new AdminDAO();
+    public AdminController(AdminView view, Stage stage) throws SQLException {
+        this.stage = stage;
+        this.view = view;
+        this.dao = new AdminDAO();
         this.subjectDAO = new SubjectDAO();
         this.studentDAO = new StudentDAO();
+
+        stage.setTitle("School Catalog - Admin Dashboard");
+        stage.setScene(view.getScene());
+        stage.sizeToScene();
+        stage.centerOnScreen();
 
         initListeners();
         refreshUsersTable();
@@ -30,131 +42,148 @@ public class AdminController {
     }
 
     private void initListeners() {
-        view.getAddButton().addActionListener(e -> addUser());
-        view.getDeleteButton().addActionListener(e -> {
-            try { deleteUser(); } catch (SQLException ex) { throw new RuntimeException(ex); }
+        view.getAddButton().setOnAction(e -> addUser());
+        view.getDeleteButton().setOnAction(e -> {
+            try { deleteUser(); } catch (SQLException ex) { ex.printStackTrace(); }
         });
-        view.getSetSubjectTeacherButton().addActionListener(e -> {
-            try { assignSubject(); } catch (SQLException ex) { throw new RuntimeException(ex); }
+        view.getSetSubjectTeacherButton().setOnAction(e -> {
+            try { assignSubject(); } catch (SQLException ex) { ex.printStackTrace(); }
         });
-        view.getEnrollButton().addActionListener(e -> {
-            try { enrollStudent(); } catch (SQLException ex) { throw new RuntimeException(ex); }
+        view.getEnrollButton().setOnAction(e -> {
+            try { enrollStudent(); } catch (SQLException ex) { ex.printStackTrace(); }
         });
-        view.getEnrollAllButton().addActionListener(e -> {
-            try { enrollAll(); } catch (SQLException ex) { throw new RuntimeException(ex); }
+        view.getEnrollAllButton().setOnAction(e -> {
+            try { enrollAll(); } catch (SQLException ex) { ex.printStackTrace(); }
         });
-        view.getRemoveEnrollButton().addActionListener(e -> {
-            try { removeEnrollment(); } catch (SQLException ex) { throw new RuntimeException(ex); }
+        view.getRemoveEnrollButton().setOnAction(e -> {
+            try { removeEnrollment(); } catch (SQLException ex) { ex.printStackTrace(); }
         });
-        // Refresh enrollment table when subject changes
-        view.getEnrollSubjectBox().addActionListener(e -> {
-            try { refreshEnrollmentsTable(); } catch (SQLException ex) { throw new RuntimeException(ex); }
+        view.getEnrollSubjectBox().setOnAction(e -> {
+            try { refreshEnrollmentsTable(); } catch (SQLException ex) { ex.printStackTrace(); }
         });
+        view.getLogoutButton().setOnAction(e -> logout());
     }
 
-    // ── Add user ──────────────────────────────────────────────────────────────
+    private void logout() {
+        new LoginController(stage);
+    }
+
     private void addUser() {
         String username = view.getUsername();
         String password = view.getPassword();
-        String name     = view.getName();
-        String email    = view.getEmail();
-        String role     = view.getRole();
+        String name = view.getName();
+        String email = view.getEmail();
+        String role = view.getRole();
 
         if (username.isEmpty() || password.isEmpty() || name.isEmpty() || email.isEmpty()) {
-            JOptionPane.showMessageDialog(view, "Please fill all required fields.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
-        if (!email.matches(emailRegex)) {
-            JOptionPane.showMessageDialog(view, "Invalid email address.", "Error", JOptionPane.ERROR_MESSAGE);
+            showAlert(Alert.AlertType.ERROR, "Error", "Please fill all required fields.");
             return;
         }
 
-        Integer studyYear  = null;
-        Integer studyGroup = null;
+        String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+        if (!email.matches(emailRegex)) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Invalid email address.");
+            return;
+        }
+
+        Integer studyYear = null;
+        String studyGroup = null;
         if ("student".equalsIgnoreCase(role)) {
-            studyYear  = view.getYear();
+            studyYear = view.getYear();
             studyGroup = view.getGroup();
         }
 
         try {
             User user = new User(username, password, role);
             dao.insertUser(user, name, email, studyYear, studyGroup);
-            JOptionPane.showMessageDialog(view, "User added successfully.");
+            showAlert(Alert.AlertType.INFORMATION, "Success", "User added successfully.");
             view.clearForm();
             refreshUsersTable();
             refreshEnrollmentCombos();
         } catch (Exception ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(view, "Error adding user: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            showAlert(Alert.AlertType.ERROR, "Error", "Error adding user: " + ex.getMessage());
         }
     }
 
-    // ── Delete user ───────────────────────────────────────────────────────────
     private void deleteUser() throws SQLException {
-        int userId = view.getSelectedUserId();
-        if (userId == -1) {
-            JOptionPane.showMessageDialog(view, "Please select a user.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        int confirm = JOptionPane.showConfirmDialog(view,
-                "Are you sure you want to delete this user?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
-        if (confirm != JOptionPane.YES_OPTION) return;
-
-        if (dao.deleteUser(userId)) {
-            refreshUsersTable();
-            refreshEnrollmentCombos();
-        } else {
-            JOptionPane.showMessageDialog(view, "Failed to delete user.", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    // ── Assign subject to teacher ─────────────────────────────────────────────
-    private void assignSubject() throws SQLException {
-        int userId = view.getSelectedUserId();
-        if (userId == -1) {
-            JOptionPane.showMessageDialog(view, "Please select a teacher.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        User user = dao.getUserById(userId);
-        if (user == null || !"teacher".equalsIgnoreCase(user.getRole())) {
-            JOptionPane.showMessageDialog(view, "Selected user is not a teacher.", "Error", JOptionPane.ERROR_MESSAGE);
+        User selected = view.getUsersTable().getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Please select a user to delete.");
             return;
         }
 
-        JTextField subjectNameField = new JTextField(12);
-        JSpinner yearSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 4, 1));
-        JPanel panel = new JPanel(new java.awt.GridLayout(2, 2, 6, 6));
-        panel.add(new JLabel("Subject name:"));  panel.add(subjectNameField);
-        panel.add(new JLabel("Study year (1-4):")); panel.add(yearSpinner);
-
-        int result = JOptionPane.showConfirmDialog(view, panel, "Assign Subject", JOptionPane.OK_CANCEL_OPTION);
-        if (result != JOptionPane.OK_OPTION) return;
-
-        String subjectName = subjectNameField.getText().trim();
-        int studyYear = (int) yearSpinner.getValue();
-        if (subjectName.isEmpty()) return;
-
-        try {
-            if (dao.assignSubjectToTeacher(userId, subjectName, studyYear)) {
-                JOptionPane.showMessageDialog(view, "Subject assigned successfully.");
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirm Delete");
+        confirm.setHeaderText(null);
+        confirm.setContentText("Are you sure you want to delete user '" + selected.getUsername() + "'?");
+        
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            if (dao.deleteUser(selected.getId())) {
                 refreshUsersTable();
                 refreshEnrollmentCombos();
             } else {
-                JOptionPane.showMessageDialog(view, "Could not assign subject (teacher may already have a subject for that year).",
-                        "Error", JOptionPane.ERROR_MESSAGE);
+                showAlert(Alert.AlertType.ERROR, "Error", "Failed to delete user.");
             }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(view, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    // ── Enrollment ────────────────────────────────────────────────────────────
+    private void assignSubject() throws SQLException {
+        User selected = view.getUsersTable().getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Please select a teacher.");
+            return;
+        }
+        
+        if (!"teacher".equalsIgnoreCase(selected.getRole())) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Selected user is not a teacher.");
+            return;
+        }
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Assign Subject");
+        dialog.setHeaderText("Assign a subject to " + selected.getUsername());
+
+        ButtonType assignButtonType = new ButtonType("Assign", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(assignButtonType, ButtonType.CANCEL);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
+        TextField subjectNameField = new TextField();
+        subjectNameField.setPromptText("Subject Name");
+        Spinner<Integer> yearSpinner = new Spinner<>(9, 12, 9);
+
+        grid.add(new Label("Subject Name:"), 0, 0);
+        grid.add(subjectNameField, 1, 0);
+        grid.add(new Label("Study Year (9-12):"), 0, 1);
+        grid.add(yearSpinner, 1, 1);
+
+        dialog.getDialogPane().setContent(grid);
+
+        Optional<ButtonType> result = dialog.showAndWait();
+        if (result.isPresent() && result.get() == assignButtonType) {
+            String subjectName = subjectNameField.getText().trim();
+            int studyYear = yearSpinner.getValue();
+            if (subjectName.isEmpty()) return;
+
+            if (dao.assignSubjectToTeacher(selected.getId(), subjectName, studyYear)) {
+                showAlert(Alert.AlertType.INFORMATION, "Success", "Subject assigned successfully.");
+                refreshUsersTable();
+                refreshEnrollmentCombos();
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Error", "Could not assign subject.");
+            }
+        }
+    }
+
     private void enrollStudent() throws SQLException {
         Subject subject = view.getSelectedEnrollSubject();
         Student student = view.getSelectedEnrollStudent();
         if (subject == null || student == null) {
-            JOptionPane.showMessageDialog(view, "Select a subject and a student.", "Error", JOptionPane.ERROR_MESSAGE);
+            showAlert(Alert.AlertType.ERROR, "Error", "Select a subject and a student.");
             return;
         }
         dao.enrollStudent(student.getId(), subject.getId());
@@ -164,25 +193,27 @@ public class AdminController {
     private void enrollAll() throws SQLException {
         Subject subject = view.getSelectedEnrollSubject();
         if (subject == null) {
-            JOptionPane.showMessageDialog(view, "Select a subject first.", "Error", JOptionPane.ERROR_MESSAGE);
+            showAlert(Alert.AlertType.ERROR, "Error", "Select a subject first.");
             return;
         }
         int count = dao.enrollAllStudentsInYear(subject.getId(), subject.getStudyYear());
-        JOptionPane.showMessageDialog(view, count + " student(s) enrolled in " + subject + ".");
+        showAlert(Alert.AlertType.INFORMATION, "Success", count + " student(s) enrolled in " + subject + ".");
         refreshEnrollmentsTable();
     }
 
     private void removeEnrollment() throws SQLException {
         Subject subject = view.getSelectedEnrollSubject();
         Student student = view.getSelectedEnrollStudent();
-        if (subject == null || student == null) return;
+        if (subject == null || student == null) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Select a subject and a student.");
+            return;
+        }
         dao.removeEnrollment(student.getId(), subject.getId());
         refreshEnrollmentsTable();
     }
 
-    // ── Refresh helpers ───────────────────────────────────────────────────────
     private void refreshUsersTable() throws SQLException {
-        view.updateUsersTable(dao.getUsers());
+        view.getUsersTable().setItems(FXCollections.observableArrayList(dao.getUsers()));
     }
 
     private void refreshEnrollmentCombos() throws SQLException {
@@ -193,12 +224,26 @@ public class AdminController {
 
     private void refreshEnrollmentsTable() throws SQLException {
         Subject subject = view.getSelectedEnrollSubject();
-        if (subject == null) return;
+        if (subject == null) {
+            view.getEnrollmentsTable().setItems(FXCollections.observableArrayList());
+            return;
+        }
         List<Student> enrolled = studentDAO.getStudentsForSubject(subject.getId());
         List<String[]> rows = new ArrayList<>();
         for (Student s : enrolled) {
-            rows.add(new String[]{s.getName() + " (Yr" + s.getStudyYear() + " Gr" + s.getStudyGroup() + ")", subject.toString()});
+            rows.add(new String[]{
+                s.getName() + " (" + s.getStudyYear() + s.getStudyGroup() + ")", 
+                subject.toString()
+            });
         }
-        view.updateEnrollmentsTable(rows);
+        view.getEnrollmentsTable().setItems(FXCollections.observableArrayList(rows));
+    }
+
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }

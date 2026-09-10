@@ -1,162 +1,178 @@
 package presentation;
 
+import javafx.beans.property.SimpleStringProperty;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.*;
 import model.Absence;
 import model.Grade;
 import model.Subject;
 
-import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
-import java.awt.*;
-import java.util.List;
-
-public class StudentView extends JPanel {
+public class StudentView {
+    private Scene scene;
+    private Button logoutButton;
 
     // Grades tab
-    private JComboBox<Subject> subjectBox;
-    private JTable gradesTable;
-    private DefaultTableModel gradesModel;
-    private JLabel gpaLabel;
+    private ComboBox<Subject> subjectBox;
+    private TableView<Grade> gradesTable;
+    private Label gpaLabel;
+    private HBox gpaBanner;
 
     // Absences tab
-    private JComboBox<Subject> absenceSubjectBox;
-    private JTable absencesTable;
-    private DefaultTableModel absencesModel;
-    private JLabel absenceSummaryLabel;
+    private ComboBox<Subject> absenceSubjectBox;
+    private TableView<Absence> absencesTable;
+    private Label absenceSummaryLabel;
 
     public StudentView() {
-        setLayout(new BorderLayout());
-        JTabbedPane tabs = new JTabbedPane();
-        tabs.setBackground(new Color(151, 21, 251));
+        BorderPane root = new BorderPane();
+        root.getStyleClass().add("root");
 
-        // ── Grades tab ────────────────────────────────────────────────────────
-        JPanel gradesPanel = new JPanel(new BorderLayout());
-        gradesPanel.setBackground(new Color(151, 21, 251));
+        // Top bar
+        HBox topBar = new HBox(15);
+        topBar.getStyleClass().add("header-bar");
+        topBar.setPadding(new Insets(15, 20, 15, 20));
+        
+        Label titleLabel = new Label("Student Dashboard");
+        titleLabel.getStyleClass().add("title-label");
+        
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        
+        logoutButton = new Button("Logout");
+        logoutButton.getStyleClass().addAll("button", "btn-danger");
+        
+        topBar.getChildren().addAll(titleLabel, spacer, logoutButton);
+        root.setTop(topBar);
 
-        // GPA banner
-        gpaLabel = new JLabel("GPA: —", JLabel.CENTER);
-        gpaLabel.setFont(new Font("", Font.BOLD, 18));
-        gpaLabel.setForeground(Color.WHITE);
-        gpaLabel.setBorder(BorderFactory.createEmptyBorder(8, 0, 8, 0));
-        gpaLabel.setOpaque(true);
-        gpaLabel.setBackground(new Color(100, 0, 180));
-        gradesPanel.add(gpaLabel, BorderLayout.NORTH);
+        TabPane tabs = new TabPane();
+        tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+        
+        Tab gradesTab = new Tab("📝 Grades");
+        gradesTab.setContent(buildGradesTab());
+        
+        Tab absencesTab = new Tab("📅 Absences");
+        absencesTab.setContent(buildAbsencesTab());
+        
+        tabs.getTabs().addAll(gradesTab, absencesTab);
+        root.setCenter(tabs);
 
-        gradesModel = new DefaultTableModel(new Object[]{"Grade"}, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
-        };
-        gradesTable = new JTable(gradesModel);
-        styleTable(gradesTable);
-        JScrollPane gradeScroll = new JScrollPane(gradesTable);
-        gradeScroll.setBorder(BorderFactory.createEmptyBorder());
-        gradesPanel.add(gradeScroll, BorderLayout.CENTER);
-
-        JPanel gradeBottom = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 8));
-        gradeBottom.setBackground(new Color(151, 21, 251));
-        JLabel subjectLabel = new JLabel("Subject:");
-        subjectLabel.setFont(new Font("", Font.BOLD, 13));
-        subjectLabel.setForeground(Color.WHITE);
-        subjectBox = new JComboBox<>();
-        subjectBox.setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, Color.BLACK));
-        subjectBox.setPreferredSize(new Dimension(180, 28));
-        subjectBox.setFont(new Font("", Font.PLAIN, 13));
-        gradeBottom.add(subjectLabel);
-        gradeBottom.add(subjectBox);
-        gradesPanel.add(gradeBottom, BorderLayout.SOUTH);
-
-        // ── Absences tab ──────────────────────────────────────────────────────
-        JPanel absencesPanel = new JPanel(new BorderLayout());
-        absencesPanel.setBackground(new Color(151, 21, 251));
-
-        absenceSummaryLabel = new JLabel("Total: 0  |  Motivated: 0  |  Unexcused: 0", JLabel.CENTER);
-        absenceSummaryLabel.setFont(new Font("", Font.BOLD, 14));
-        absenceSummaryLabel.setForeground(Color.WHITE);
-        absenceSummaryLabel.setOpaque(true);
-        absenceSummaryLabel.setBackground(new Color(100, 0, 180));
-        absenceSummaryLabel.setBorder(BorderFactory.createEmptyBorder(6, 0, 6, 0));
-        absencesPanel.add(absenceSummaryLabel, BorderLayout.NORTH);
-
-        absencesModel = new DefaultTableModel(new Object[]{"Date", "Motivated"}, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
-        };
-        absencesTable = new JTable(absencesModel);
-        styleTable(absencesTable);
-        absencesPanel.add(new JScrollPane(absencesTable), BorderLayout.CENTER);
-
-        JPanel absenceBottom = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 8));
-        absenceBottom.setBackground(new Color(151, 21, 251));
-        JLabel absSubjectLabel = new JLabel("Subject:");
-        absSubjectLabel.setFont(new Font("", Font.BOLD, 13));
-        absSubjectLabel.setForeground(Color.WHITE);
-        absenceSubjectBox = new JComboBox<>();
-        absenceSubjectBox.setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, Color.BLACK));
-        absenceSubjectBox.setPreferredSize(new Dimension(180, 28));
-        absenceSubjectBox.setFont(new Font("", Font.PLAIN, 13));
-        absenceBottom.add(absSubjectLabel);
-        absenceBottom.add(absenceSubjectBox);
-        absencesPanel.add(absenceBottom, BorderLayout.SOUTH);
-
-        tabs.addTab("Grades", gradesPanel);
-        tabs.addTab("Absences", absencesPanel);
-        tabs.setBorder(BorderFactory.createEmptyBorder());
-        add(tabs, BorderLayout.CENTER);
+        scene = new Scene(root, 900, 600);
+        scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-    private void styleTable(JTable t) {
-        t.setFont(new Font("", Font.PLAIN, 13));
-        t.setRowHeight(28);
-        t.setShowGrid(false);
-        JTableHeader h = t.getTableHeader();
-        h.setFont(new Font("", Font.BOLD, 14));
-        DefaultTableCellRenderer cr = new DefaultTableCellRenderer();
-        cr.setHorizontalAlignment(JLabel.CENTER);
-        for (int i = 0; i < t.getColumnCount(); i++) t.getColumnModel().getColumn(i).setCellRenderer(cr);
-        ((DefaultTableCellRenderer) h.getDefaultRenderer()).setHorizontalAlignment(JLabel.CENTER);
+    private BorderPane buildGradesTab() {
+        BorderPane panel = new BorderPane();
+
+        // GPA Banner
+        gpaBanner = new HBox();
+        gpaBanner.setAlignment(Pos.CENTER);
+        gpaBanner.setPadding(new Insets(15));
+        gpaBanner.getStyleClass().add("gpa-medium");
+        
+        gpaLabel = new Label("GPA: —");
+        gpaLabel.getStyleClass().add("title-label");
+        gpaBanner.getChildren().add(gpaLabel);
+        
+        panel.setTop(gpaBanner);
+
+        // Table
+        gradesTable = new TableView<>();
+        gradesTable.getStyleClass().add("table-view");
+        
+        TableColumn<Grade, String> valCol = new TableColumn<>("Grade");
+        valCol.setCellValueFactory(data -> new SimpleStringProperty(String.valueOf(data.getValue().getValue())));
+        
+        gradesTable.getColumns().add(valCol);
+        gradesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        
+        VBox tableContainer = new VBox();
+        tableContainer.setPadding(new Insets(20));
+        tableContainer.getChildren().add(gradesTable);
+        VBox.setVgrow(gradesTable, Priority.ALWAYS);
+        panel.setCenter(tableContainer);
+
+        // Bottom subject selector
+        HBox bottom = new HBox(15);
+        bottom.setPadding(new Insets(20));
+        bottom.getStyleClass().add("card");
+        
+        subjectBox = new ComboBox<>();
+        subjectBox.getStyleClass().add("combo-box");
+        subjectBox.setPrefWidth(200);
+        
+        bottom.getChildren().addAll(makeDarkLabel("Subject:"), subjectBox);
+        panel.setBottom(bottom);
+
+        return panel;
     }
 
-    // ── Subject combos ────────────────────────────────────────────────────────
-    public void setSubjectsGrade(List<Subject> subjects) {
-        subjectBox.removeAllItems();
-        for (Subject s : subjects) subjectBox.addItem(s);
+    private BorderPane buildAbsencesTab() {
+        BorderPane panel = new BorderPane();
+
+        // Summary Banner
+        HBox summaryBanner = new HBox();
+        summaryBanner.setAlignment(Pos.CENTER);
+        summaryBanner.setPadding(new Insets(15));
+        summaryBanner.setStyle("-fx-background-color: #3E1978;");
+        
+        absenceSummaryLabel = new Label("Total: 0  |  Motivated: 0  |  Unexcused: 0");
+        absenceSummaryLabel.getStyleClass().add("title-label");
+        summaryBanner.getChildren().add(absenceSummaryLabel);
+        
+        panel.setTop(summaryBanner);
+
+        // Table
+        absencesTable = new TableView<>();
+        absencesTable.getStyleClass().add("table-view");
+        
+        TableColumn<Absence, String> dateCol = new TableColumn<>("Date");
+        dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
+        
+        TableColumn<Absence, String> motCol = new TableColumn<>("Motivated");
+        motCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().isMotivated() ? "✓ Yes" : "✗ No"));
+        
+        absencesTable.getColumns().addAll(dateCol, motCol);
+        absencesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        
+        VBox tableContainer = new VBox();
+        tableContainer.setPadding(new Insets(20));
+        tableContainer.getChildren().add(absencesTable);
+        VBox.setVgrow(absencesTable, Priority.ALWAYS);
+        panel.setCenter(tableContainer);
+
+        // Bottom subject selector
+        HBox bottom = new HBox(15);
+        bottom.setPadding(new Insets(20));
+        bottom.getStyleClass().add("card");
+        
+        absenceSubjectBox = new ComboBox<>();
+        absenceSubjectBox.getStyleClass().add("combo-box");
+        absenceSubjectBox.setPrefWidth(200);
+        
+        bottom.getChildren().addAll(makeDarkLabel("Subject:"), absenceSubjectBox);
+        panel.setBottom(bottom);
+
+        return panel;
     }
 
-    public void setAbsenceSubjects(List<Subject> subjects) {
-        absenceSubjectBox.removeAllItems();
-        for (Subject s : subjects) absenceSubjectBox.addItem(s);
+    private Label makeDarkLabel(String text) {
+        Label l = new Label(text);
+        l.setStyle("-fx-font-weight: bold; -fx-text-fill: #230F41;");
+        return l;
     }
 
-    public Subject getSelectedSubject()        { return (Subject) subjectBox.getSelectedItem(); }
-    public Subject getSelectedAbsenceSubject() { return (Subject) absenceSubjectBox.getSelectedItem(); }
-    public JComboBox<Subject> getSubjectBox()       { return subjectBox; }
-    public JComboBox<Subject> getAbsenceSubjectBox(){ return absenceSubjectBox; }
-
-    // ── Grades update ─────────────────────────────────────────────────────────
-    public void updateGrades(List<Grade> grades) {
-        gradesModel.setRowCount(0);
-        double sum = 0;
-        for (Grade g : grades) {
-            sum += g.getValue();
-            gradesModel.addRow(new Object[]{g.getValue()});
-        }
-        if (!grades.isEmpty()) {
-            double avg = sum / grades.size();
-            gpaLabel.setText(String.format("GPA: %.2f", avg));
-        } else {
-            gpaLabel.setText("GPA: —");
-        }
-    }
-
-    // ── Absences update ───────────────────────────────────────────────────────
-    public void updateAbsences(List<Absence> absences) {
-        absencesModel.setRowCount(0);
-        long motivated = absences.stream().filter(Absence::isMotivated).count();
-        long unexcused = absences.size() - motivated;
-        absenceSummaryLabel.setText(
-                "Total: " + absences.size() + "  |  Motivated: " + motivated + "  |  Unexcused: " + unexcused);
-        for (Absence a : absences) {
-            absencesModel.addRow(new Object[]{a.getDate().toString(), a.isMotivated() ? "✓" : "✗"});
-        }
-    }
+    public Scene getScene() { return scene; }
+    public Button getLogoutButton() { return logoutButton; }
+    
+    public ComboBox<Subject> getSubjectBox() { return subjectBox; }
+    public TableView<Grade> getGradesTable() { return gradesTable; }
+    public Label getGpaLabel() { return gpaLabel; }
+    public HBox getGpaBanner() { return gpaBanner; }
+    
+    public ComboBox<Subject> getAbsenceSubjectBox() { return absenceSubjectBox; }
+    public TableView<Absence> getAbsencesTable() { return absencesTable; }
+    public Label getAbsenceSummaryLabel() { return absenceSummaryLabel; }
 }

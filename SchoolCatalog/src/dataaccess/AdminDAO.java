@@ -10,7 +10,7 @@ import java.util.List;
 public class AdminDAO {
 
     public int insertUser(User user, String name, String email,
-                          Integer studyYear, Integer studyGroup) throws Exception {
+                          Integer studyYear, String studyGroup) throws Exception {
         Connection connection = ConnectionFactory.getConnection();
         try {
             connection.setAutoCommit(false);
@@ -36,7 +36,7 @@ public class AdminDAO {
                     ps.setString(2, name);
                     ps.setString(3, email);
                     ps.setInt(4, studyYear);
-                    ps.setInt(5, studyGroup);
+                    ps.setString(5, studyGroup);
                     ps.executeUpdate();
                 }
             } else if ("teacher".equalsIgnoreCase(user.getRole())) {
@@ -72,10 +72,11 @@ public class AdminDAO {
 
     public List<User> getUsers() throws SQLException {
         List<User> users = new ArrayList<>();
-        String sql = "SELECT u.id, u.username, u.password, u.role, sub.name AS subject_name " +
+        String sql = "SELECT u.id, u.username, u.password, u.role, sub.name AS subject_name, st.study_year, st.study_group " +
                      "FROM users u " +
                      "LEFT JOIN teachers t ON u.id = t.user_id " +
                      "LEFT JOIN subjects sub ON t.id = sub.teacher_id " +
+                     "LEFT JOIN students st ON u.id = st.user_id " +
                      "ORDER BY u.role, u.username";
         try (Connection connection = ConnectionFactory.getConnection();
              PreparedStatement ps = connection.prepareStatement(sql);
@@ -83,7 +84,15 @@ public class AdminDAO {
             while (rs.next()) {
                 User user = new User(rs.getInt("id"), rs.getString("username"),
                         rs.getString("password"), rs.getString("role"));
-                user.setSubject(rs.getString("subject_name"));
+                String extra = rs.getString("subject_name");
+                if ("student".equalsIgnoreCase(user.getRole())) {
+                    int year = rs.getInt("study_year");
+                    String group = rs.getString("study_group");
+                    if (!rs.wasNull()) {
+                        extra = "Class " + year + group;
+                    }
+                }
+                user.setSubject(extra);
                 users.add(user);
             }
         }
@@ -148,12 +157,12 @@ public class AdminDAO {
         }
     }
 
-    public boolean updateStudentYearGroup(int userId, int studyYear, int studyGroup) throws SQLException {
+    public boolean updateStudentYearGroup(int userId, int studyYear, String studyGroup) throws SQLException {
         String sql = "UPDATE students SET study_year = ?, study_group = ? WHERE user_id = ?";
         try (Connection connection = ConnectionFactory.getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, studyYear);
-            ps.setInt(2, studyGroup);
+            ps.setString(2, studyGroup);
             ps.setInt(3, userId);
             return ps.executeUpdate() > 0;
         }

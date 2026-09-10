@@ -29,7 +29,7 @@ public class StudentDAO {
                             rs.getString("name"),
                             rs.getString("email"),
                             rs.getInt("study_year"),
-                            rs.getInt("study_group")
+                            rs.getString("study_group")
                     ));
                 }
             }
@@ -49,7 +49,7 @@ public class StudentDAO {
                         rs.getString("name"),
                         rs.getString("email"),
                         rs.getInt("study_year"),
-                        rs.getInt("study_group")
+                        rs.getString("study_group")
                 ));
             }
         }

@@ -1,22 +1,17 @@
 package start;
 
+import javafx.application.Application;
+import javafx.stage.Stage;
+import presentation.LoginController;
 
-import presentation.MainWindow;
-
-import javax.swing.*;
-import java.awt.*;
-
-public class Main {
+public class Main extends Application {
+    
+    @Override
+    public void start(Stage primaryStage) {
+        new LoginController(primaryStage);
+    }
+    
     public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        SwingUtilities.invokeLater(() -> {
-            MainWindow mainWindow = new MainWindow();
-            mainWindow.setVisible(true);
-        });
+        launch(args);
     }
 }

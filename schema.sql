@@ -36,10 +36,10 @@ CREATE TABLE students (
     user_id     INT UNIQUE NOT NULL,
     name        VARCHAR(100) NOT NULL,
     email       VARCHAR(100),
-    study_year  INT NOT NULL DEFAULT 1,   -- 1 to 4
-    study_group INT NOT NULL DEFAULT 1,   -- 1 to 5
-    CONSTRAINT chk_year  CHECK (study_year  BETWEEN 1 AND 4),
-    CONSTRAINT chk_group CHECK (study_group BETWEEN 1 AND 5),
+    study_year  INT NOT NULL DEFAULT 9,   -- 9 to 12
+    study_group VARCHAR(1) NOT NULL DEFAULT 'A',   -- A to C
+    CONSTRAINT chk_year  CHECK (study_year  BETWEEN 9 AND 12),
+    CONSTRAINT chk_group CHECK (study_group IN ('A','B','C')),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -50,8 +50,8 @@ CREATE TABLE subjects (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     name       VARCHAR(100) NOT NULL,
     teacher_id INT NOT NULL,
-    study_year INT NOT NULL,              -- 1 to 4, which year this subject belongs to
-    CONSTRAINT chk_subject_year CHECK (study_year BETWEEN 1 AND 4),
+    study_year INT NOT NULL,              -- 9 to 12, which year this subject belongs to
+    CONSTRAINT chk_subject_year CHECK (study_year BETWEEN 9 AND 12),
     UNIQUE KEY uq_teacher_year (teacher_id, study_year),   -- one subject per teacher per year
     FOREIGN KEY (teacher_id) REFERENCES teachers(id)
 );
