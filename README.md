@@ -38,10 +38,7 @@ Before running the application, ensure you have the following installed on your 
 ## How to Build and Run
 
 1. Open a terminal or command prompt in the project root directory (where the `pom.xml` file is located).
-2. Build the project using Maven:
-   ```bash
-   mvn clean package
-   ```
+2. Build the project using Maven
 3. Run the application:
    You can run the generated executable JAR file located in the `target` directory, or execute the main class directly from your IDE. The main entry point for the application is `start.Main`.
 
