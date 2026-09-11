@@ -26,11 +26,13 @@ public class AdminView {
     private Label yearLabel, groupLabel;
     private Button addButton, deleteButton, editButton, setSubjectTeacher, logoutButton, changePasswordButton;
 
-
     private ComboBox<Subject> enrollSubjectBox;
     private ComboBox<Student> enrollStudentBox;
     private Button enrollButton, enrollAllButton, removeEnrollButton;
     private TableView<String[]> enrollmentsTable;
+
+    private TableView<String[]> subjectsTable;
+    private Button deleteSubjectButton, reassignSubjectButton;
 
     public AdminView() {
         BorderPane root = new BorderPane();
@@ -63,7 +65,10 @@ public class AdminView {
         Tab enrollTab = new Tab("📋 Enrollments");
         enrollTab.setContent(buildEnrollmentsTab());
         
-        tabs.getTabs().addAll(usersTab, enrollTab);
+        Tab subjectsTab = new Tab("📚 Subjects");
+        subjectsTab.setContent(buildSubjectsTab());
+        
+        tabs.getTabs().addAll(usersTab, enrollTab, subjectsTab);
         root.setCenter(tabs);
 
         scene = new Scene(root, 900, 600);
@@ -235,6 +240,49 @@ public class AdminView {
         return panel;
     }
 
+    private BorderPane buildSubjectsTab() {
+        BorderPane panel = new BorderPane();
+
+        HBox controls = new HBox(10);
+        controls.setPadding(new Insets(20));
+        controls.getStyleClass().add("card");
+
+        deleteSubjectButton = new Button("Delete Subject");
+        deleteSubjectButton.getStyleClass().addAll("button", "btn-danger");
+
+        reassignSubjectButton = new Button("Reassign Teacher");
+        reassignSubjectButton.getStyleClass().addAll("button", "btn-primary");
+
+        controls.getChildren().addAll(
+            new javafx.scene.control.Label("Select a subject below, then use an action:"),
+            reassignSubjectButton, deleteSubjectButton
+        );
+        panel.setTop(controls);
+
+        subjectsTable = new TableView<>();
+        subjectsTable.getStyleClass().add("table-view");
+
+        TableColumn<String[], String> nameCol = new TableColumn<>("Subject");
+        nameCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue()[1]));
+
+        TableColumn<String[], String> yearCol = new TableColumn<>("Year");
+        yearCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue()[2]));
+
+        TableColumn<String[], String> teacherCol = new TableColumn<>("Teacher");
+        teacherCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue()[3]));
+
+        subjectsTable.getColumns().addAll(nameCol, yearCol, teacherCol);
+        subjectsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        VBox tableContainer = new VBox();
+        tableContainer.setPadding(new Insets(0, 20, 20, 20));
+        tableContainer.getChildren().add(subjectsTable);
+        VBox.setVgrow(subjectsTable, Priority.ALWAYS);
+
+        panel.setCenter(tableContainer);
+        return panel;
+    }
+
     private VBox makeLabeledField(String text, Control field) {
         VBox box = new VBox(5);
         box.getChildren().addAll(makeLabel(text), field);
@@ -257,6 +305,9 @@ public class AdminView {
     
     public TableView<User> getUsersTable() { return usersTable; }
     public TableView<String[]> getEnrollmentsTable() { return enrollmentsTable; }
+    public TableView<String[]> getSubjectsTable() { return subjectsTable; }
+    public Button getDeleteSubjectButton() { return deleteSubjectButton; }
+    public Button getReassignSubjectButton() { return reassignSubjectButton; }
     
     public Button getAddButton() { return addButton; }
     public Button getDeleteButton() { return deleteButton; }

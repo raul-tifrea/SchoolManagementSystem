@@ -1,51 +1,54 @@
 # School Catalog
 
-This is a Java-based desktop application for managing a school catalog. It provides a graphical user interface (GUI) to handle various school-related entities and their data.
+A desktop application for managing a high school catalog. Built with Java and JavaFX, it supports three user roles — admin, teacher, and student — each with their own dashboard.
 
-## Features
+## What it does
 
-The system allows users to manage the following data models:
-- Students
-- Teachers
-- Subjects
-- Grades
-- Absences
-- Users (for system access)
+**Admin** can add, edit, and delete users, assign subjects to teachers, and manage student enrollments.
 
-## Technology Stack
+**Teachers** can record grades and absences for students enrolled in their subjects, and mark absences as motivated.
 
-- **Language:** Java
-- **GUI Framework:** Java Swing
-- **Build Tool:** Maven
-- **Database:** MySQL
+**Students** can view their grades, GPA, and absences per subject.
 
-## Prerequisites
+All passwords are hashed with BCrypt. Every user can change their own password from within the app.
 
-Before running the application, ensure you have the following installed on your system:
-- Java Development Kit (JDK) 16 or later
+## Tech stack
+
+- Java 16, JavaFX 17
+- MySQL
 - Maven
-- MySQL Server
+- jBCrypt for password hashing
 
-## Database Setup
+## Requirements
 
-1. Make sure your local MySQL server is running.
-2. Create a database named `schooldb`.
-3. The application connects to the database using the following default credentials (configured in `connection.ConnectionFactory`):
-   - **URL:** jdbc:mysql://localhost:3306/schooldb
-   - **User:** root
-   - **Password:** 0000
+- JDK 16 or later
+- Maven
+- MySQL Server running locally
 
-## How to Build and Run
+## Database setup
 
-1. Open a terminal or command prompt in the project root directory (where the `pom.xml` file is located).
-2. Build the project using Maven
-3. Run the application:
-   You can run the generated executable JAR file located in the `target` directory, or execute the main class directly from your IDE. The main entry point for the application is `start.Main`.
+Run `schema.sql` on your MySQL server. It creates the `schooldb` database and seeds a default admin account.
 
-## Project Structure
+The connection settings are in `src/connection/ConnectionFactory.java`:
+- URL: `jdbc:mysql://localhost:3306/schooldb`
+- User: `root`
+- Password: `0000`
 
-- `src/model/`: Contains the data models for the application (Student, Teacher, Grade, etc.).
-- `src/dataaccess/`: Contains the classes responsible for database interactions.
-- `src/presentation/`: Contains the Swing GUI components (like `MainWindow`).
-- `src/connection/`: Contains the `ConnectionFactory` for establishing the database connection.
-- `src/start/`: Contains the `Main` class to launch the application.
+Default admin login: username `admin`, password `0000`.
+
+## Running the app
+
+run `start.Starter` directly from your IDE.
+
+## Project structure
+
+```
+src/
+  connection/      Database connection factory
+  dataaccess/      DAO classes for all database operations
+  model/           Data models (User, Student, Teacher, Subject, Grade, Absence)
+  presentation/    JavaFX views and controllers for each role
+  start/           Application entry points
+  util/            Password hashing utility
+  css/             Application stylesheet
+```

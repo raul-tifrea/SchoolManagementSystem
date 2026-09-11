@@ -14,7 +14,7 @@ public class GradeDAO {
 
     public List<Grade> getGradesForStudent(int userId, int subjectId) throws SQLException {
         List<Grade> grades = new ArrayList<>();
-        String sql = "SELECT g.id, g.grade, sub.name AS subject_name " +
+        String sql = "SELECT g.id, g.grade, g.grade_date, sub.name AS subject_name " +
                      "FROM grades g " +
                      "JOIN students st ON g.student_id = st.id " +
                      "JOIN subjects sub ON g.subject_id = sub.id " +
@@ -30,7 +30,8 @@ public class GradeDAO {
                             rs.getInt("id"),
                             null,
                             rs.getString("subject_name"),
-                            rs.getDouble("grade")
+                            rs.getDouble("grade"),
+                            rs.getString("grade_date")
                     ));
                 }
             }
@@ -40,7 +41,7 @@ public class GradeDAO {
 
     public List<Grade> getGradesForTeacherSubject(int subjectId) throws SQLException {
         List<Grade> grades = new ArrayList<>();
-        String sql = "SELECT g.id, st.name AS student_name, sub.name AS subject_name, g.grade " +
+        String sql = "SELECT g.id, st.name AS student_name, sub.name AS subject_name, g.grade, g.grade_date " +
                      "FROM grades g " +
                      "JOIN students st ON g.student_id = st.id " +
                      "JOIN subjects sub ON g.subject_id = sub.id " +
@@ -55,7 +56,8 @@ public class GradeDAO {
                             rs.getInt("id"),
                             rs.getString("student_name"),
                             rs.getString("subject_name"),
-                            rs.getDouble("grade")
+                            rs.getDouble("grade"),
+                            rs.getString("grade_date")
                     ));
                 }
             }

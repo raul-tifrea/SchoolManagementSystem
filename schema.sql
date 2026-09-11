@@ -1,5 +1,5 @@
 -- ============================================================
---  Faculty Catalog — Database Schema
+--  School Catalog — Database Schema
 --  Run this in MySQL Workbench or the MySQL CLI
 -- ============================================================
 
@@ -29,7 +29,7 @@ CREATE TABLE teachers (
 );
 
 -- -------------------------------------------------------
--- Students — fixed year (1-4) and group (1-5)
+-- Students — year (9-12) and group (A-C)
 -- -------------------------------------------------------
 CREATE TABLE students (
     id          INT AUTO_INCREMENT PRIMARY KEY,
@@ -79,7 +79,7 @@ CREATE TABLE grades (
     grade_date DATE DEFAULT (CURRENT_DATE),
     CONSTRAINT chk_grade CHECK (grade BETWEEN 1 AND 10),
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
-    FOREIGN KEY (subject_id) REFERENCES subjects(id)
+    FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
 );
 
 -- -------------------------------------------------------
@@ -92,7 +92,7 @@ CREATE TABLE absences (
     absence_date DATE NOT NULL,
     motivated    BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
-    FOREIGN KEY (subject_id) REFERENCES subjects(id)
+    FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
 );
 
 -- -------------------------------------------------------

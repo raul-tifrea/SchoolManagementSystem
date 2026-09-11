@@ -41,6 +41,7 @@ public class AdminController {
         initListeners();
         refreshUsersTable();
         refreshEnrollmentCombos();
+        refreshSubjectsTable();
     }
 
     private void initListeners() {
@@ -68,6 +69,12 @@ public class AdminController {
         });
         view.getChangePasswordButton().setOnAction(e -> changePassword(adminUserId));
         view.getLogoutButton().setOnAction(e -> logout());
+        view.getDeleteSubjectButton().setOnAction(e -> {
+            try { deleteSubject(); } catch (SQLException ex) { ex.printStackTrace(); }
+        });
+        view.getReassignSubjectButton().setOnAction(e -> {
+            try { reassignSubject(); } catch (SQLException ex) { ex.printStackTrace(); }
+        });
     }
 
     private void logout() {
@@ -268,6 +275,7 @@ public class AdminController {
         grid.setVgap(10);
         grid.setPadding(new Insets(20, 20, 10, 10));
 
+        TextField usernameEditField = new TextField(selected.getUsername());
         TextField nameField = new TextField();
         TextField emailField = new TextField();
         Spinner<Integer> yearSpinner = new Spinner<>(9, 12, 9);
@@ -275,8 +283,9 @@ public class AdminController {
         groupBox.getItems().addAll("A", "B", "C");
         groupBox.setValue("A");
 
-        grid.add(new Label("Full Name:"), 0, 0); grid.add(nameField, 1, 0);
-        grid.add(new Label("Email:"), 0, 1); grid.add(emailField, 1, 1);
+        grid.add(new Label("Username:"), 0, 0); grid.add(usernameEditField, 1, 0);
+        grid.add(new Label("Full Name:"), 0, 1); grid.add(nameField, 1, 1);
+        grid.add(new Label("Email:"), 0, 2); grid.add(emailField, 1, 2);
 
         if ("student".equalsIgnoreCase(selected.getRole())) {
             String[] details = dao.getStudentDetails(selected.getId());
@@ -286,8 +295,8 @@ public class AdminController {
                 yearSpinner.getValueFactory().setValue(Integer.parseInt(details[2]));
                 groupBox.setValue(details[3]);
             }
-            grid.add(new Label("Class (9-12):"), 0, 2); grid.add(yearSpinner, 1, 2);
-            grid.add(new Label("Group (A-C):"), 0, 3); grid.add(groupBox, 1, 3);
+            grid.add(new Label("Class (9-12):"), 0, 3); grid.add(yearSpinner, 1, 3);
+            grid.add(new Label("Group (A-C):"), 0, 4); grid.add(groupBox, 1, 4);
         } else {
             String[] details = dao.getTeacherDetails(selected.getId());
             if (details != null) {
@@ -299,25 +308,33 @@ public class AdminController {
         dialog.getDialogPane().setContent(grid);
         Optional<ButtonType> result = dialog.showAndWait();
         if (result.isPresent() && result.get() == saveType) {
+            String newUsername = usernameEditField.getText().trim();
             String name = nameField.getText().trim();
             String email = emailField.getText().trim();
-            if (name.isEmpty() || email.isEmpty()) {
-                showAlert(Alert.AlertType.ERROR, "Error", "Name and email cannot be empty.");
+            if (newUsername.isEmpty() || name.isEmpty() || email.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Error", "Username, name and email cannot be empty.");
                 return;
             }
-            boolean updated;
-            if ("student".equalsIgnoreCase(selected.getRole())) {
-                updated = dao.updateStudentDetails(selected.getId(), name, email,
-                        yearSpinner.getValue(), groupBox.getValue());
-            } else {
-                updated = dao.updateTeacherDetails(selected.getId(), name, email);
-            }
-            if (updated) {
-                showAlert(Alert.AlertType.INFORMATION, "Success", "User updated successfully.");
-                refreshUsersTable();
-                refreshEnrollmentCombos();
-            } else {
-                showAlert(Alert.AlertType.ERROR, "Error", "Failed to update user.");
+            try {
+                if (!newUsername.equals(selected.getUsername())) {
+                    dao.updateUsername(selected.getId(), newUsername);
+                }
+                boolean updated;
+                if ("student".equalsIgnoreCase(selected.getRole())) {
+                    updated = dao.updateStudentDetails(selected.getId(), name, email,
+                            yearSpinner.getValue(), groupBox.getValue());
+                } else {
+                    updated = dao.updateTeacherDetails(selected.getId(), name, email);
+                }
+                if (updated) {
+                    showAlert(Alert.AlertType.INFORMATION, "Success", "User updated successfully.");
+                    refreshUsersTable();
+                    refreshEnrollmentCombos();
+                } else {
+                    showAlert(Alert.AlertType.ERROR, "Error", "Failed to update user.");
+                }
+            } catch (SQLException ex) {
+                showAlert(Alert.AlertType.ERROR, "Error", "Update failed: " + ex.getMessage());
             }
         }
     }
@@ -367,6 +384,74 @@ public class AdminController {
                 showAlert(Alert.AlertType.INFORMATION, "Success", "Password changed successfully.");
             } catch (SQLException ex) {
                 showAlert(Alert.AlertType.ERROR, "Error", "Database error: " + ex.getMessage());
+            }
+        }
+    }
+
+    private void refreshSubjectsTable() throws SQLException {
+        view.getSubjectsTable().setItems(
+            FXCollections.observableArrayList(dao.getAllSubjectsDetailed()));
+    }
+
+    private void deleteSubject() throws SQLException {
+        String[] selected = view.getSubjectsTable().getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Please select a subject to delete.");
+            return;
+        }
+        int subjectId = Integer.parseInt(selected[0]);
+        int[] stats = dao.getSubjectStats(subjectId);
+        String warning = String.format(
+            "Deleting '%s' will permanently remove:\n" +
+            "  - %d enrollment(s)\n" +
+            "  - %d grade(s)\n" +
+            "  - %d absence(s)\n\n" +
+            "This cannot be undone. Proceed?",
+            selected[1], stats[0], stats[1], stats[2]);
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Delete Subject");
+        confirm.setHeaderText(null);
+        confirm.setContentText(warning);
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            dao.deleteSubject(subjectId);
+            refreshSubjectsTable();
+            refreshEnrollmentCombos();
+            refreshUsersTable();
+            showAlert(Alert.AlertType.INFORMATION, "Deleted", "Subject deleted.");
+        }
+    }
+
+    private void reassignSubject() throws SQLException {
+        String[] selected = view.getSubjectsTable().getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Please select a subject to reassign.");
+            return;
+        }
+        int subjectId = Integer.parseInt(selected[0]);
+
+        List<User> teachers = dao.getUsers().stream()
+            .filter(u -> "teacher".equalsIgnoreCase(u.getRole()))
+            .collect(java.util.stream.Collectors.toList());
+        if (teachers.isEmpty()) {
+            showAlert(Alert.AlertType.ERROR, "Error", "No teachers available.");
+            return;
+        }
+
+        ChoiceDialog<User> dialog = new ChoiceDialog<>(teachers.get(0), teachers);
+        dialog.setTitle("Reassign Teacher");
+        dialog.setHeaderText("Reassign '" + selected[1] + "' (Year " + selected[2] + ") to a new teacher:");
+        dialog.setContentText("Teacher:");
+
+        Optional<User> result = dialog.showAndWait();
+        if (result.isPresent()) {
+            try {
+                dao.reassignSubjectTeacher(subjectId, result.get().getId());
+                refreshSubjectsTable();
+                refreshUsersTable();
+                showAlert(Alert.AlertType.INFORMATION, "Success", "Subject reassigned successfully.");
+            } catch (SQLException ex) {
+                showAlert(Alert.AlertType.ERROR, "Error", ex.getMessage());
             }
         }
     }

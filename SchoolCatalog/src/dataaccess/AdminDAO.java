@@ -237,5 +237,97 @@ public class AdminDAO {
         }
         return null;
     }
-}
 
+    public boolean updateUsername(int userId, String newUsername) throws SQLException {
+        String sql = "UPDATE users SET username = ? WHERE id = ?";
+        try (Connection connection = ConnectionFactory.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, newUsername);
+            ps.setInt(2, userId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public List<String[]> getAllSubjectsDetailed() throws SQLException {
+        List<String[]> rows = new ArrayList<>();
+        String sql = "SELECT s.id, s.name, s.study_year, t.name AS teacher_name " +
+                     "FROM subjects s JOIN teachers t ON s.teacher_id = t.id " +
+                     "ORDER BY s.study_year, s.name";
+        try (Connection connection = ConnectionFactory.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                rows.add(new String[]{
+                    String.valueOf(rs.getInt("id")),
+                    rs.getString("name"),
+                    String.valueOf(rs.getInt("study_year")),
+                    rs.getString("teacher_name")
+                });
+            }
+        }
+        return rows;
+    }
+
+    public int[] getSubjectStats(int subjectId) throws SQLException {
+        int[] stats = new int[3];
+        String enrollSql = "SELECT COUNT(*) FROM enrollments WHERE subject_id = ?";
+        String gradeSql  = "SELECT COUNT(*) FROM grades WHERE subject_id = ?";
+        String absSql    = "SELECT COUNT(*) FROM absences WHERE subject_id = ?";
+        try (Connection c = ConnectionFactory.getConnection()) {
+            try (PreparedStatement ps = c.prepareStatement(enrollSql)) {
+                ps.setInt(1, subjectId); ResultSet rs = ps.executeQuery();
+                if (rs.next()) stats[0] = rs.getInt(1);
+            }
+            try (PreparedStatement ps = c.prepareStatement(gradeSql)) {
+                ps.setInt(1, subjectId); ResultSet rs = ps.executeQuery();
+                if (rs.next()) stats[1] = rs.getInt(1);
+            }
+            try (PreparedStatement ps = c.prepareStatement(absSql)) {
+                ps.setInt(1, subjectId); ResultSet rs = ps.executeQuery();
+                if (rs.next()) stats[2] = rs.getInt(1);
+            }
+        }
+        return stats;
+    }
+
+    public boolean deleteSubject(int subjectId) throws SQLException {
+        String sql = "DELETE FROM subjects WHERE id = ?";
+        try (Connection connection = ConnectionFactory.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, subjectId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public boolean reassignSubjectTeacher(int subjectId, int newTeacherUserId) throws SQLException {
+        String getYearSql = "SELECT study_year FROM subjects WHERE id = ?";
+        String checkSql   = "SELECT COUNT(*) FROM subjects s " +
+                            "JOIN teachers t ON s.teacher_id = t.id " +
+                            "WHERE t.user_id = ? AND s.study_year = ? AND s.id != ?";
+        String updateSql  = "UPDATE subjects SET teacher_id = " +
+                            "(SELECT id FROM teachers WHERE user_id = ?) WHERE id = ?";
+        try (Connection c = ConnectionFactory.getConnection()) {
+            int year;
+            try (PreparedStatement ps = c.prepareStatement(getYearSql)) {
+                ps.setInt(1, subjectId);
+                ResultSet rs = ps.executeQuery();
+                if (!rs.next()) return false;
+                year = rs.getInt("study_year");
+            }
+            try (PreparedStatement ps = c.prepareStatement(checkSql)) {
+                ps.setInt(1, newTeacherUserId);
+                ps.setInt(2, year);
+                ps.setInt(3, subjectId);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next() && rs.getInt(1) > 0) {
+                    throw new SQLException("Teacher already has a subject for year " + year + ".");
+                }
+            }
+            try (PreparedStatement ps = c.prepareStatement(updateSql)) {
+                ps.setInt(1, newTeacherUserId);
+                ps.setInt(2, subjectId);
+                return ps.executeUpdate() > 0;
+            }
+        }
+    }
+}

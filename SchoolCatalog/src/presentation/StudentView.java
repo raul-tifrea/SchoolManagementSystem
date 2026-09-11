@@ -87,8 +87,11 @@ public class StudentView {
         
         TableColumn<Grade, String> valCol = new TableColumn<>("Grade");
         valCol.setCellValueFactory(data -> new SimpleStringProperty(String.valueOf(data.getValue().getValue())));
-        
-        gradesTable.getColumns().add(valCol);
+
+        TableColumn<Grade, String> dateCol = new TableColumn<>("Date");
+        dateCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getGradeDate()));
+
+        gradesTable.getColumns().addAll(valCol, dateCol);
         gradesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         
         VBox tableContainer = new VBox();
