@@ -248,6 +248,53 @@ public class AdminDAO {
         }
     }
 
+    public List<String[]> getAllStudentsDetailed() throws SQLException {
+        List<String[]> rows = new ArrayList<>();
+        String sql = "SELECT u.id, u.username, s.name, s.email, s.study_year, s.study_group " +
+                     "FROM users u JOIN students s ON u.id = s.user_id " +
+                     "ORDER BY s.study_year, s.study_group, s.name";
+        try (Connection connection = ConnectionFactory.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                rows.add(new String[]{
+                    String.valueOf(rs.getInt("id")),
+                    rs.getString("username"),
+                    rs.getString("name"),
+                    rs.getString("email"),
+                    String.valueOf(rs.getInt("study_year")),
+                    rs.getString("study_group")
+                });
+            }
+        }
+        return rows;
+    }
+
+    public List<String[]> getAllTeachersDetailed() throws SQLException {
+        List<String[]> rows = new ArrayList<>();
+        String sql = "SELECT u.id, u.username, t.name, t.email, GROUP_CONCAT(sub.name SEPARATOR ', ') AS subjects " +
+                     "FROM users u " +
+                     "JOIN teachers t ON u.id = t.user_id " +
+                     "LEFT JOIN subjects sub ON t.id = sub.teacher_id " +
+                     "GROUP BY u.id, u.username, t.name, t.email " +
+                     "ORDER BY t.name";
+        try (Connection connection = ConnectionFactory.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                String subs = rs.getString("subjects");
+                rows.add(new String[]{
+                    String.valueOf(rs.getInt("id")),
+                    rs.getString("username"),
+                    rs.getString("name"),
+                    rs.getString("email"),
+                    subs != null ? subs : "None"
+                });
+            }
+        }
+        return rows;
+    }
+
     public List<String[]> getAllSubjectsDetailed() throws SQLException {
         List<String[]> rows = new ArrayList<>();
         String sql = "SELECT s.id, s.name, s.study_year, t.name AS teacher_name " +

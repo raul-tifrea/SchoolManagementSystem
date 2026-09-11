@@ -4,7 +4,7 @@ import dataaccess.AbsenceDAO;
 import dataaccess.GradeDAO;
 import dataaccess.SubjectDAO;
 import javafx.collections.FXCollections;
-import javafx.scene.control.Alert;
+import javafx.scene.control.*;
 import javafx.stage.Stage;
 import model.Absence;
 import model.Grade;
